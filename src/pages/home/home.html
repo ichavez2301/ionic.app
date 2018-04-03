@@ -1,0 +1,21 @@
+<ion-header>
+  <ion-navbar color="primary">
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Clientes</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+  <!-- <ion-searchbar (ionInput)="getItems($event)"></ion-searchbar> -->
+  <ion-list>
+    <button ion-item *ngFor="let customer of customers | async" (click)="itemSelected(customer)">
+      <ion-avatar class="ion-avatar-icon" item-start>
+        <ion-icon name="home"></ion-icon>
+      </ion-avatar>
+      <h2>{{ customer.company }}</h2>
+      <h3>${{ customer.balance }}</h3>
+    </button>  
+  </ion-list>
+</ion-content>

@@ -1,0 +1,26 @@
+<!--
+  Generated template for the CreditsPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar color="primary">
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Notas de Crédito</ion-title>
+  </ion-navbar>
+</ion-header>
+
+
+<ion-content padding>
+  <ion-list>
+      <ion-item *ngFor="let order of Orders | async" (tap)="asheet(order)">
+        <h2>C{{order.id}} / {{order.customer.company}}</h2>
+        <h3>{{order.data}}</h3>
+        <p>$ {{order.balance}}</p>
+      </ion-item>
+    </ion-list>
+</ion-content>
