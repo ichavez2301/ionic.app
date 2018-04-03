@@ -29,6 +29,10 @@ plugins/android.json
 plugins/ios.json
 www/
 $RECYCLE.BIN/
+horchatasdonbeto*
+*.keystore
+app-release-unsigned.apk
+signer_key.txt
 
 .DS_Store
 Thumbs.db
