@@ -33,8 +33,11 @@
       <ion-label floating>{{product.name}}</ion-label>
       <ion-input type="number" [(ngModel)]="product.qty" [max]="_parseFloat(product.qty)" (keyup)="validateQty(product)"></ion-input>
     </ion-item>
-    <ion-item>
-      <button ion-button block (click)="addProduct()" color="primary">Agregar Merma</button>
-    </ion-item>
   </ion-list>
+
+  <ion-fab right bottom>
+    <button ion-fab (tap)="addProduct()" color="primary">
+      <ion-icon name="add"></ion-icon>
+    </button>
+  </ion-fab>
 </ion-content>

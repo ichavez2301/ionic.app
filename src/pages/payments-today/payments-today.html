@@ -1,0 +1,39 @@
+<!--
+  Generated template for the PaymentsTodayPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar color="primary">
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+
+    <ion-title>Pagos de hoy</ion-title>
+
+    <ion-buttons end>
+      <button only-icon ion-button>
+        <ion-icon name="cash"></ion-icon> &nbsp;
+        ${{total}}
+      </button>
+    </ion-buttons>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+  <ion-list>
+    <ion-item *ngFor="let payment of payments">
+      <ion-avatar class="ion-avatar-icon" item-start>
+        <ion-icon name="cash"></ion-icon>
+      </ion-avatar>
+
+      <h2>O{{payment.oid}} {{payment.customer.company}}</h2>
+      <h3>${{payment.amount}}</h3>
+      <p>{{payment.date}}</p>
+    </ion-item>
+  </ion-list>
+</ion-content>

@@ -8,6 +8,7 @@ import { HomePage } from '../pages/home/home';
 import { AngularFireAuth } from 'angularfire2/auth'
 import { LoginPage } from '../pages/login/login';
 import { ExpensesListPage } from '../pages/expenses-list/expenses-list'
+import { PaymentsTodayPage } from '../pages/payments-today/payments-today'
 
 
 @Component({
@@ -30,8 +31,8 @@ export class MyApp {
     // used for an example of ngFor and navigation
     this.pages = [
       { title: 'Clientes', component: HomePage, icon: 'contact' },
-      //{ title: 'Notas de credito', component: CreditsPage, icon: 'calculator' },
-      { title: 'Gastos', component: ExpensesListPage, icon: 'exit' }
+      { title: 'Gastos', component: ExpensesListPage, icon: 'exit' },
+      { title: 'Pagos', component: PaymentsTodayPage, icon: 'cash' }
     ];
 
   }

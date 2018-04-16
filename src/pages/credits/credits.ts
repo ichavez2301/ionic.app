@@ -52,28 +52,26 @@ export class CreditsPage implements OnInit {
   asheet(order) {
     let actionSheet = this.as.create({
       title: 'Opciones',
-      buttons: [
-        {
-          icon: 'card',
-          text: 'Abonar',
-          handler: () => {
-            this.navCtrl.push(PaymentPage, { customer: this.Customer, order: order })
-          }
-        },{
-          icon: 'card',
-          text: 'Registrar mermas',
-          handler: () => {
-            this.navCtrl.push(LossesPage, { customer: this.Customer, order: order })
-          }
-        },{
-          icon: 'close',
-          text: 'Cancelar',
-          role: 'cancel',
-          handler: () => {
-            console.log('Cancel clicked');
-          }
+      buttons: [{
+        icon: 'card',
+        text: 'Abonar',
+        handler: () => {
+          this.navCtrl.push(PaymentPage, { customer: this.Customer, order: order })
         }
-      ]
+      },{
+        icon: 'card',
+        text: 'Registrar mermas',
+        handler: () => {
+          this.navCtrl.push(LossesPage, { customer: this.Customer, order: order })
+        }
+      },{
+        icon: 'close',
+        text: 'Cancelar',
+        role: 'cancel',
+        handler: () => {
+          console.log('Cancel clicked');
+        }
+      }]
     });
     actionSheet.present();
   }

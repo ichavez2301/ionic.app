@@ -5,14 +5,16 @@ import { IonicApp, IonicErrorHandler, IonicModule } from 'ionic-angular';
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
 import { ListPage } from '../pages/list/list';
-import { LoginPage } from '../pages/login/login';
-import { OrdersPage } from '../pages/orders/orders';
-import { ProductsPage } from '../pages/products/products';
-import { PaymentPage } from '../pages/payment/payment';
-import { ExpensesPage } from '../pages/expenses/expenses';
-import { LossesPage } from '../pages/losses/losses';
-import { CreditsPage } from '../pages/credits/credits';
-import { ExpensesListPage } from '../pages/expenses-list/expenses-list';
+
+import { LoginPageModule } from '../pages/login/login.module';
+import { OrdersPageModule } from '../pages/orders/orders.module';
+import { ProductsPageModule } from '../pages/products/products.module';
+import { PaymentPageModule } from '../pages/payment/payment.module';
+import { ExpensesPageModule } from '../pages/expenses/expenses.module';
+import { LossesPageModule } from '../pages/losses/losses.module';
+import { CreditsPageModule } from '../pages/credits/credits.module';
+import { ExpensesListPageModule } from '../pages/expenses-list/expenses-list.module';
+import { PaymentsTodayPageModule } from '../pages/payments-today/payments-today.module'
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
@@ -21,26 +23,37 @@ import { AngularFireModule } from 'angularfire2';
 import { AngularFirestoreModule } from 'angularfire2/firestore';
 import { HttpModule } from '@angular/http';
 import { MapNavigationProvider } from '../providers/map-navigation/map-navigation';
-import { config } from '../providers/firebase/firebase.config';
 import { AngularFireAuthModule } from 'angularfire2/auth'
+import { RepaymentsProvider } from '../providers/repayments/repayments';
+import { CustomerProvider } from '../providers/customer/customer';
+import { OrderProvider } from '../providers/order/order';
+import { ReturnsProvider } from '../providers/returns/returns';
+import { PaymentProvider } from '../providers/payment/payment';
+
+
+import { config } from '../providers/firebase/firebase.config';
 
 @NgModule({
   declarations: [
     MyApp,
     HomePage,
-    ListPage,
-    LoginPage,
-    OrdersPage,
-    ProductsPage,
-    PaymentPage,
-    ExpensesPage,
-    LossesPage,
-    CreditsPage,
-    ExpensesListPage
+    ListPage
   ],
   imports: [
     BrowserModule,
     HttpModule,
+
+    LoginPageModule,
+    OrdersPageModule,
+    ProductsPageModule,
+    ProductsPageModule,
+    ExpensesPageModule,
+    LossesPageModule,
+    CreditsPageModule,
+    ExpensesListPageModule,
+    PaymentPageModule,
+    PaymentsTodayPageModule,
+
     IonicModule.forRoot(MyApp),
     AngularFireModule.initializeApp(config),
     AngularFirestoreModule.enablePersistence(),
@@ -51,21 +64,18 @@ import { AngularFireAuthModule } from 'angularfire2/auth'
   entryComponents: [
     MyApp,
     HomePage,
-    ListPage,
-    LoginPage,
-    OrdersPage,
-    ProductsPage,
-    PaymentPage,
-    ExpensesPage,
-    LossesPage,
-    CreditsPage,
-    ExpensesListPage
+    ListPage
   ],
   providers: [
     StatusBar,
     SplashScreen,
-    {provide: ErrorHandler, useClass: IonicErrorHandler},
-    MapNavigationProvider
+    { provide: ErrorHandler, useClass: IonicErrorHandler },
+    MapNavigationProvider,
+    RepaymentsProvider,
+    CustomerProvider,
+    OrderProvider,
+    ReturnsProvider,
+    PaymentProvider
   ]
 })
 export class AppModule {}

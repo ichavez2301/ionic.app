@@ -8,6 +8,8 @@ import { ProductsPage } from '../products/products'
 import { AlertController } from 'ionic-angular/components/alert/alert-controller';
 import { HomePage } from '../home/home';
 import moment from 'moment'
+import { PaymentProvider } from '../../providers/payment/payment';
+import { Order } from '../../providers/order/order';
 /**
  * Generated class for the OrdersPage page.
  *
@@ -15,17 +17,6 @@ import moment from 'moment'
  * Ionic pages and navigation.
  */
 
-interface Order {
-  amount: number,
-  balance: number,
-  cid: number,
-  eid: number,
-  customer: any,
-  data: string,
-  orderType: string,
-  products: any,
-  total: number
-}
 
 @IonicPage()
 @Component({
@@ -35,7 +26,7 @@ interface Order {
 export class OrdersPage {
   public orderCollection: AngularFirestoreCollection<Order>
   
-  public form = { 
+  public form: Order = { 
     customer: {
       address: "",
       balance: 0,
@@ -43,14 +34,16 @@ export class OrdersPage {
       contact: "",
       eid: 0,
       email: "",
-      employee: "",
       id: 0,
-      limit_credit: "",
+      limit_credit: 0,
       more_price: 0,
       phone: "",
       postal_code: ""
     },
-    date: moment(new Date()).format("YYYY-MM-DD"),
+    products: [],
+    eid: "",
+    cid: 0,
+    data: moment().format("YYYY-MM-DD"),
     orderType: "contado",
     total: 0,
     balance: 0,
@@ -61,6 +54,7 @@ export class OrdersPage {
   public productsOnOrder = [];
 
   constructor(
+    public paymentProvider: PaymentProvider,
     public navCtrl: NavController, 
     public navParams: NavParams, 
     public modalCtrl: ModalController,
@@ -79,7 +73,7 @@ export class OrdersPage {
     modal.onDidDismiss((product) => {
       if(product) {
         product["qty"] = 1;
-        this.productsOnOrder.push(product)  
+        this.productsOnOrder.push(product)
         this.updateTotal()
       }
     })
@@ -102,44 +96,38 @@ export class OrdersPage {
       return
     }
     
+    let myinputs = [];
+    if(this.form.orderType == 'credito') {
+      myinputs.push({
+        label: 'Recibí',
+        name: 'amount',
+        placeholder: "$",
+      })
+    }
+
     let prompt = this.alertCtrl.create({
-      title: 'Terminar Pedido',
-      inputs: [
-        {
-          label: "Total",
-          name: 'total',
-          placeholder: '$',
-          disabled: true,
-          value: this.form.total.toString()
-        },
-        {
-          label: 'Recibí',
-          name: 'amount',
-          disabled: (this.form.orderType == "contado") ? true: false,
-          value: (this.form.orderType == "contado") ? this.form.total.toString() : "",
-          placeholder: "$",
-        },
-      ],
-      buttons: [
-        {
-          text: 'Cancelar',
-          handler: data => {
-            console.log('Cancel clicked');
-          }
-        }, {
-          text: 'Guardar',
-          handler: data => {
-            this.form.amount  = parseFloat(data.amount);
-            if(this.form.amount > 0) {
-              this.form.balance = parseFloat(this.form.total.toString()) - this.form.amount
-              this.saveOrder()
-            } else {
-              alert("Debe agregar una cantidad mayor a cero para continuar.")
-            }
+      title: 'Terminar Pedido' ,
+      message: 'Total: $ ' + this.form.total.toString(),
+      inputs: myinputs,
+      buttons: [{
+        text: 'Cancelar',
+        handler: data => {
+          console.log('Cancel clicked');
+        }
+      }, {
+        text: 'Guardar',
+        handler: data => {
+          this.form.amount  = parseFloat(data.amount);
+          if(this.form.amount >= 0) {
+            this.form.balance = parseFloat(this.form.total.toString()) - this.form.amount
+            this.saveOrder()
+          } else {
+            alert("Debe agregar una cantidad valida para continuar.")
           }
         }
-      ]
+      }]
     });
+    
     prompt.present()
   }
 
@@ -154,19 +142,20 @@ export class OrdersPage {
         let newId = 1        
         if(res.docChanges.length > 0)
           newId = parseInt(res.docChanges[0].doc.data().id) + 1
-
+          if(true) {
+          //create order
           this.orderCollection.ref.doc(newId.toString())
           .set({
-            id: newId,
-            amount: this.form.amount,
-            balance: this.form.balance,
-            cid: this.form.customer.id,
-            eid: this.employee,
-            customer: this.form.customer,
-            data: moment().format("Y-MM-DD"),
-            orderType: this.form.orderType,
-            products: this.productsOnOrder,
-            total: this.form.total
+            id        : newId,
+            amount    : this.form.amount,
+            balance   : this.form.balance,
+            cid       : this.form.customer.id,
+            eid       : this.employee,
+            customer  : this.form.customer,
+            data      : moment().format("Y-MM-DD HH:mm"),
+            orderType : this.form.orderType,
+            products  : this.productsOnOrder,
+            total     : this.form.total
           }).then((res) => {
             
             let currentCustomer = this.form.customer
@@ -175,57 +164,61 @@ export class OrdersPage {
             this.afs.collection("customers").doc(this.form.customer.id.toString())
               .update(currentCustomer)
 
-            this.afs.collection("payments")
-            .add({
-              amount: this.form.amount,
-              oid: newId,
-              eid: this.form.customer.eid,
-              cid: this.form.customer.id,
-              date: moment().format("YYYY-MM-DD"),
-              return: false
-            })          
+            //this.form.customer.more_price = parseFloat(this.form.customer.more_price)
+            let payment = {
+              customer  : this.form.customer,
+              amount    : this.form.amount,
+              oid       : newId,
+              eid       : this.afa.auth.currentUser.uid,
+              cid       : this.form.customer.id,
+              date      : moment().format("YYYY-MM-DD HH:mm"),
+              return    : false
+            };
             
-
-            //actualizar las ventas y pa  gos del dia del empleado
-            // this.afs.collection("employees").ref.where("uid", "==", this.employee).get()
-            // .then((res) => {
-            //   if(res.docChanges.length > 0) {
-            //     let oldDataEmployee = res.docChanges[0].doc.data()
-                
-            //     if(oldDataEmployee.paymentDate == moment().format("YYYY-MM-DD")) {
-            //       oldDataEmployee.paymentsToday = parseFloat(oldDataEmployee.paymentsToday.toString()) + parseFloat(this.form.amount.toString())
-            //       oldDataEmployee.salesToday = parseFloat(oldDataEmployee.salesToday) + parseFloat(this.form.total.toString())
-            //     } else {
-            //       oldDataEmployee.paymentsToday = this.form.amount
-            //       oldDataEmployee.salesToday = this.form.total
-            //     }
-                
-            //     oldDataEmployee.saleDay = moment().format("YYYY-MM-DD")
-            //     oldDataEmployee.paymentDate = moment().format("YYYY-MM-DD")
-
-            //     this.afs.collection("employees").doc(oldDataEmployee.id.toString())
-            //     .set(oldDataEmployee)
-            //   }
-            // })
-
-            //batch products info 
-            this.productsOnOrder
-            .forEach((product) => {
-              this.afs.collection("productsSales")
-              .add({
-                employee_id: this.form.customer.eid,
-                customer_id: this.form.customer.id,
-                order_id: newId,
-                price: product.price,
-                qty: product.qty,
-                category: product.category,
-                product_id: product.id,
-                date: moment().format("YYYY-MM-DD")
+            this.paymentProvider.create(payment).then(() => {
+              this.productsOnOrder
+              .forEach((product) => {
+                this.afs.collection("productsSales")
+                .add({
+                  employee_id: this.form.customer.eid,
+                  customer_id: this.form.customer.id,
+                  order_id: newId,
+                  price: product.price,
+                  qty: product.qty,
+                  category: product.category,
+                  product_id: product.id,
+                  date: moment().format("YYYY-MM-DD HH:mm")
+                })
               })
+  
+              this.navCtrl.setRoot(HomePage)
             })
 
-            this.navCtrl.setRoot(HomePage)
+
+            //actualizar las ventas y pagos del dia del empleado
+            this.afs.collection("employees").ref.where("uid", "==", this.employee).get()
+            .then((res) => {
+              if(res.docChanges.length > 0) {
+                let oldDataEmployee = res.docChanges[0].doc.data()
+                
+                if(oldDataEmployee.paymentDate == moment().format("YYYY-MM-DD")) {
+                  oldDataEmployee.paymentsToday = parseFloat(oldDataEmployee.paymentsToday.toString()) + parseFloat(this.form.amount.toString())
+                  oldDataEmployee.salesToday = parseFloat(oldDataEmployee.salesToday) + parseFloat(this.form.total.toString())
+                } else {
+                  oldDataEmployee.paymentsToday = this.form.amount
+                  oldDataEmployee.salesToday = this.form.total
+                }
+                
+                oldDataEmployee.saleDay = moment().format("YYYY-MM-DD")
+                oldDataEmployee.paymentDate = moment().format("YYYY-MM-DD")
+
+                this.afs.collection("employees").doc(oldDataEmployee.id.toString())
+                .set(oldDataEmployee)
+              }
+            })
+            //batch products info 
           })
+        }
       })
     } else {
       alert("Agregue un producto a la orden")

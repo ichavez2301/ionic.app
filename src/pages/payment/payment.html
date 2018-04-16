@@ -12,20 +12,23 @@
 
 </ion-header>
 
-
 <ion-content padding>
-    <ion-item>
-      <ion-label floating>Adeudo</ion-label>
-      <ion-input [(ngModel)]="form.balance" type="number" disabled></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label floating>Pago de</ion-label>
-      <ion-input [(ngModel)]="form.amount" type="number"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label floating>Resta</ion-label>
-      <ion-input value="{{form.balance - form.amount}}" disabled type="number"></ion-input>
-    </ion-item>
+  <ion-item>
+    <ion-label floating>Adeudo</ion-label>
+    <ion-input [(ngModel)]="form.balance" type="number" disabled></ion-input>
+  </ion-item>
+  <ion-item>
+    <ion-label floating>Pago de</ion-label>
+    <ion-input [(ngModel)]="form.amount" type="number"></ion-input>
+  </ion-item>
+  <ion-item>
+    <ion-label floating>Resta</ion-label>
+    <ion-input value="{{form.balance - form.amount}}" disabled type="number"></ion-input>
+  </ion-item>
 
-    <button ion-button full (click)="doPayment()">Registrar Pago</button>
+  <ion-fab right bottom>
+      <button ion-fab (tap)="doPayment()" color="primary">
+        <ion-icon name="send"></ion-icon>
+      </button>
+    </ion-fab>
 </ion-content>

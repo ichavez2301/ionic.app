@@ -70,7 +70,11 @@ export class HomePage implements OnInit {
           text: 'Nuevo Pedido',
           role: 'destructive',
           handler: () => {
-            this.navCtrl.push(OrdersPage, customer)
+            if(parseFloat(customer.balance) >= parseFloat(customer.limit_credit)) {
+              alert("Este cliente ha superdado su limite de credito.")
+            } else {
+              this.navCtrl.push(OrdersPage, customer)
+            }
           }
         }, 
         {
@@ -83,13 +87,7 @@ export class HomePage implements OnInit {
               alert("El cliente no cuenta con adeudo!")
           }
         }, 
-        /*{
-          icon: 'share-alt',
-          text: 'Registrar mermas',
-          handler: () => {
-            this.navCtrl.push(LossesPage, customer)
-          }
-        }*/{
+        {
           icon: 'map',
           text: 'Mapa',
           handler: () => {
