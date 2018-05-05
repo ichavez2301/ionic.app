@@ -7,7 +7,7 @@
 
   <ion-content>
     <ion-list>
-      <button menuClose ion-item *ngFor="let p of pages" (click)="openPage(p)">
+      <button menuClose ion-item *ngFor="let p of pages" (tap)="openPage(p)">
         <ion-avatar class="ion-avatar-icon" item-start>
           <ion-icon name="{{p.icon}}"></ion-icon>
         </ion-avatar>
@@ -15,7 +15,7 @@
       </button>
 
       <br><br>
-      <button ion-item (click)="signOut()">
+      <button ion-item (tap)="signOut()">
         <ion-avatar class="ion-avatar-icon" item-start>
           <ion-icon name="exit"></ion-icon>
         </ion-avatar>

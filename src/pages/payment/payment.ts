@@ -66,8 +66,8 @@ export class PaymentPage {
         this.orderProvider.update(this.currentOrder, this.currentOrder.id)
 
         //actualizar los pagos del dia del empleado
-        this.afs.collection("employees", ref => ref.where("uid", "==", this.afa.auth.currentUser.uid))
-        .ref.get()
+        this.afs.collection("employees").ref.where("uid", "==", this.afa.auth.currentUser.uid)
+        .get()
         .then((res) => {
           if(res.docChanges.length > 0) {
             let currentEmployee = res.docChanges[0].doc.data()

@@ -19,7 +19,7 @@ export class RepaymentsProvider {
   public async create(repayments: Repayments) {
     let id = await this.autoincrement()
     repayments.id = parseInt(id.toString())
-    return this.db.collection(this.key).doc(id.toString()).set(this.toArray(repayments))
+    return this.db.collection(this.key).doc(id.toString()).set(Object.assign({}, repayments))
   }
 
   public async autoincrement(): Promise<Number> {

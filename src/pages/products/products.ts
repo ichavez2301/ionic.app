@@ -3,6 +3,7 @@ import { IonicPage, NavController, NavParams, ViewController } from 'ionic-angul
 import { AngularFirestore, AngularFirestoreCollection } from "angularfire2/firestore";
 import 'rxjs/add/operator/map'
 import { Observable } from 'rxjs/Observable';
+import { Product } from '../../providers/products/products';
 
 
 // import { FirebaseProvider } from '../../providers/firebase/firebase'
@@ -12,14 +13,6 @@ import { Observable } from 'rxjs/Observable';
  * See https://ionicframework.com/docs/components/#navigation for more info on
  * Ionic pages and navigation.
  */
-
-interface Product {
-  category: string,
-  id: number,
-  name: string,
-  price: number,
-  sale: number
-}
 
 @IonicPage()
 @Component({
@@ -48,9 +41,9 @@ export class ProductsPage {
   
   itemSelected(product) {
     if(this.isCollection)
-      product.price = parseFloat(product.price) - parseFloat(this.customer.more_price)
+      product.price = product.price - this.customer.discount
     else 
-      product.price = parseFloat(product.price)
+      product.price = product.price
       
     this.viewCtrl.dismiss(product)
   }

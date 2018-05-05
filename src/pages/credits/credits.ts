@@ -16,7 +16,7 @@ interface Order {
   balance: number,
   cid: number,
   customer: number,
-  data: string, //date
+  date: string, //date
   eid: string,
   id: number,
   orderType: string,

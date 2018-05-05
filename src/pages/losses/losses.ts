@@ -115,6 +115,7 @@ export class LossesPage {
         this.products.forEach((product) => {
           product.customer  = this.customer
           product.cid       = this.customer.id.toString()
+          product.eid       = this.afa.auth.currentUser.uid
           product.date      = moment().format("YYYY-MM-DD hh:mm:ss")
 
           this.returnProvider.create(product)

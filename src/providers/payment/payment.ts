@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Customer, CustomerProvider } from '../customer/customer';
+import { CustomerProvider, Customer } from '../customer/customer';
 import { AngularFirestore } from 'angularfire2/firestore';
 import moment from 'moment'
 import { OrderProvider } from '../order/order';
@@ -32,7 +32,7 @@ export class PaymentProvider {
     this.customerProvider.find(payment.cid).ref.get()
     .then((res) => {
       let customer = res.data()
-      let curcustomer = CustomerProvider.convert(customer)
+      let curcustomer: any = customer
       curcustomer.lastvisit = new Date()
 
       this.customerProvider.update(curcustomer, payment.cid)
@@ -43,7 +43,7 @@ export class PaymentProvider {
     this.orderProvider.find(payment.oid).ref.get()
     .then((res) => {
       let order = res.data()
-      let curOrder = OrderProvider.convert(order)
+      let curOrder: any = order
       curOrder.lastpayment = new Date()
       
       this.orderProvider.update(curOrder, payment.oid)

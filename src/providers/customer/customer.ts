@@ -3,6 +3,7 @@ import { AngularFirestore } from 'angularfire2/firestore';
 
 export class Customer {
   id?: number
+  rid: number
   address: string 
   balance: number
   company: string
@@ -10,7 +11,7 @@ export class Customer {
   eid: number
   email: string
   limit_credit: number
-  more_price: number
+  discount: number
   phone: string
   postal_code: string
   lastvisit?: Date | null
@@ -24,17 +25,19 @@ export class CustomerProvider {
   public async create(customer) {
     let id = await this.autoincrement()
     customer.id = parseInt(id.toString())
-    return this.db.collection(this.key).doc(id.toString()).set(this.toArray(customer))
+    return this.db.collection(this.key).doc(id.toString()).set(Object.assign({}, customer))
   }
 
   public update(customer: Customer, id: number) {
-    return this.db.collection(this.key).doc(id.toString()).set(this.toArray(customer))
+    console.log(customer)
+    return this.db.collection(this.key).doc(id.toString()).set(Object.assign({}, customer))
   }
 
   public static convert(customer: any): Customer {
     let newcustomer: Customer = new Customer();
 
     newcustomer.id            = customer.id
+    newcustomer.rid           = customer.rid
     newcustomer.address       = customer.address
     newcustomer.balance       = customer.balance
     newcustomer.company       = customer.company
@@ -42,7 +45,7 @@ export class CustomerProvider {
     newcustomer.eid           = customer.eid
     newcustomer.email         = customer.email
     newcustomer.limit_credit  = customer.limit_credit
-    newcustomer.more_price    = customer.more_price
+    newcustomer.discount      = customer.discount
     newcustomer.phone         = customer.phone
     newcustomer.postal_code   = customer.postal_code
     newcustomer.lastvisit     = customer.lastvisit

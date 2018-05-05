@@ -32,6 +32,8 @@ import { PaymentProvider } from '../providers/payment/payment';
 
 
 import { config } from '../providers/firebase/firebase.config';
+import { EmployeesProvider } from '../providers/employees/employees';
+import { ProductsProvider } from '../providers/products/products';
 
 @NgModule({
   declarations: [
@@ -75,7 +77,9 @@ import { config } from '../providers/firebase/firebase.config';
     CustomerProvider,
     OrderProvider,
     ReturnsProvider,
-    PaymentProvider
+    PaymentProvider,
+    EmployeesProvider,
+    ProductsProvider
   ]
 })
 export class AppModule {}

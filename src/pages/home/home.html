@@ -10,7 +10,7 @@
 <ion-content padding>
   <!-- <ion-searchbar (ionInput)="getItems($event)"></ion-searchbar> -->
   <ion-list>
-    <button ion-item *ngFor="let customer of customers | async" (click)="itemSelected(customer)">
+    <button ion-item *ngFor="let customer of customers | async" (tap)="itemSelected(customer)">
       <ion-avatar class="ion-avatar-icon" item-start>
         <ion-icon name="home"></ion-icon>
       </ion-avatar>

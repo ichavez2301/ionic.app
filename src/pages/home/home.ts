@@ -11,20 +11,8 @@ import { OrdersPage } from '../orders/orders'
 import { CreditsPage } from '../credits/credits'
 
 import { MapNavigationProvider } from '../../providers/map-navigation/map-navigation'
+import { Customer } from '../../providers/customer/customer';
 
-interface Customer {
-  id:string,
-  address:string,
-  balance:number,
-  company:string,
-  contact:string,
-  eid:string,
-  email:string,
-  limit_credit: string,
-  more_credit: number,
-  phone:string,
-  postal_code: string
-}
 
 @Component({
   selector: 'page-home',
@@ -52,7 +40,8 @@ export class HomePage implements OnInit {
         this.afs.collection("employees").ref.where("uid", "==", res.uid).get()
           .then((res) => {
             if(res.docChanges.length > 0) { 
-              this.customersCollection = this.afs.collection("customers", ref => ref.where("eid", "==", parseInt(res.docChanges[0].doc.id)).orderBy("company", "asc"))
+              let currentEmployee = res.docChanges[0].doc.data()
+              this.customersCollection = this.afs.collection("customers", ref => ref.where("rid", "==", parseInt(currentEmployee.rid)).orderBy("company", "asc"))
               this.customers = this.customersCollection.valueChanges()
               this.customersOld = Object.assign({}, this.customers);
             }

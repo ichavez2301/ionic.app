@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, LoadingController } from 'ionic-angular';
 import { AngularFireAuth } from 'angularfire2/auth';
+import { AngularFirestore } from 'angularfire2/firestore'
 
 /**
  * Generated class for the LoginPage page.
@@ -19,18 +20,39 @@ import { AngularFireAuth } from 'angularfire2/auth';
 export class LoginPage {
 
   email: string = ''
-  password: string = ''
-  
+  password: string = ''   
 
-  constructor(public navCtrl: NavController, public navParams: NavParams, private afa: AngularFireAuth) {
+  constructor(
+    public navCtrl: NavController, 
+    public navParams: NavParams, 
+    private afa: AngularFireAuth, 
+    public loadingCtrl: LoadingController,
+    private afs: AngularFirestore) {
   }
 
   async signIn() {
+    let loading = this.loadingCtrl.create({content: 'Espere porfavor...'})
+    loading.present();
+
     this.afa.auth.signInWithEmailAndPassword(this.email, this.password)
     .then((user) => {
-      this.navCtrl.setRoot(HomePage)
+
+      this.afs.collection("employees").ref.where("uid", "==", this.afa.auth.currentUser.uid)
+      .get()
+      .then((res) => {
+        loading.dismiss()
+        if(res.docChanges.length > 0) {
+          let myuser = res.docChanges[0].doc.data()
+          if(myuser.status == 'active') {
+            this.navCtrl.setRoot(HomePage)
+          } else {
+            alert("El usuario ah sido bloqueado por un administrador")
+          }
+        }
+      })
     })
     .catch((err) => {
+      loading.dismiss()
       alert("Usuario y/o contraseña incorrecta!!")
     })
   }

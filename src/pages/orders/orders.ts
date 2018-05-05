@@ -9,7 +9,10 @@ import { AlertController } from 'ionic-angular/components/alert/alert-controller
 import { HomePage } from '../home/home';
 import moment from 'moment'
 import { PaymentProvider } from '../../providers/payment/payment';
-import { Order } from '../../providers/order/order';
+import { Order, OrderProvider } from '../../providers/order/order';
+import { CustomerProvider } from '../../providers/customer/customer';
+import { EmployeesProvider } from '../../providers/employees/employees';
+import { Product } from '../../providers/products/products';
 /**
  * Generated class for the OrdersPage page.
  *
@@ -28,6 +31,7 @@ export class OrdersPage {
   
   public form: Order = { 
     customer: {
+      rid: 0,
       address: "",
       balance: 0,
       company: "",
@@ -36,24 +40,27 @@ export class OrdersPage {
       email: "",
       id: 0,
       limit_credit: 0,
-      more_price: 0,
+      discount: 0,
       phone: "",
       postal_code: ""
     },
     products: [],
     eid: "",
     cid: 0,
-    data: moment().format("YYYY-MM-DD"),
+    date: moment().format("YYYY-MM-DD"),
     orderType: "contado",
     total: 0,
     balance: 0,
     amount: 0
   };
 
-  public employee = null;  
-  public productsOnOrder = [];
+  public uid = null;  
+  public productsOnOrder: Array<Product> = [];
 
   constructor(
+    public employeeProvider: EmployeesProvider,
+    public orderProvider: OrderProvider,
+    public customerProvider: CustomerProvider,
     public paymentProvider: PaymentProvider,
     public navCtrl: NavController, 
     public navParams: NavParams, 
@@ -62,8 +69,8 @@ export class OrdersPage {
     private afs: AngularFirestore,
     private afa: AngularFireAuth
   ) {
-    this.form.customer = this.navParams.data;
-    this.employee = this.afa.auth.currentUser.uid
+    this.form.customer  = this.navParams.data;
+    this.uid            = this.afa.auth.currentUser.uid
   }
 
   addProduct() {
@@ -81,8 +88,9 @@ export class OrdersPage {
 
   updateTotal() {
     this.form.total = 0
-    for(let index in this.productsOnOrder) 
-      this.form.total += parseFloat(this.productsOnOrder[index].price) * parseInt(this.productsOnOrder[index].qty); 
+    for(let index in this.productsOnOrder) {
+      this.form.total += this.productsOnOrder[index].price * this.productsOnOrder[index].qty; 
+    }
   }
   
   deleteItem(index){
@@ -117,7 +125,7 @@ export class OrdersPage {
       }, {
         text: 'Guardar',
         handler: data => {
-          this.form.amount  = parseFloat(data.amount);
+          this.form.amount  = (this.form.orderType == 'credito') ? parseFloat(data.amount) : this.form.total;
           if(this.form.amount >= 0) {
             this.form.balance = parseFloat(this.form.total.toString()) - this.form.amount
             this.saveOrder()
@@ -132,94 +140,74 @@ export class OrdersPage {
   }
 
   saveOrder() {
+    //guardar orden
     if(this.productsOnOrder.length > 0) {
-      this.form["cid"] = this.form.customer.id
-      this.form["products"] = this.productsOnOrder
-      this.orderCollection = this.afs.collection("orders", ref => ref.orderBy("id", "desc"))
-
-      this.orderCollection.ref.orderBy("id", "desc").get()
-      .then((res) => {
-        let newId = 1        
-        if(res.docChanges.length > 0)
-          newId = parseInt(res.docChanges[0].doc.data().id) + 1
-          if(true) {
-          //create order
-          this.orderCollection.ref.doc(newId.toString())
-          .set({
-            id        : newId,
-            amount    : this.form.amount,
-            balance   : this.form.balance,
-            cid       : this.form.customer.id,
-            eid       : this.employee,
+      
+      this.form.cid = this.form.customer.id
+      this.form.products = this.productsOnOrder
+      this.form.eid = this.uid
+      //crear orden
+      //actualizar cliente
+      //crear pago
+      //actualizar saldo empleado
+      this.orderProvider.create(this.form)
+      .then((res: any) => {
+        let newId :number = this.orderProvider.lastInsertId();
+        let currentCustomer = this.form.customer
+        currentCustomer.balance = currentCustomer.balance + this.form.balance
+        
+        this.customerProvider.update(currentCustomer, this.form.customer.id)
+        .then(() => {
+          let payment = {
             customer  : this.form.customer,
-            data      : moment().format("Y-MM-DD HH:mm"),
-            orderType : this.form.orderType,
-            products  : this.productsOnOrder,
-            total     : this.form.total
-          }).then((res) => {
-            
-            let currentCustomer = this.form.customer
-            currentCustomer.balance = parseFloat(currentCustomer.balance.toString()) + parseFloat(this.form.balance.toString())
+            amount    : this.form.amount,
+            oid       : newId,
+            eid       : this.uid,
+            cid       : this.form.customer.id,
+            date      : moment().format("YYYY-MM-DD HH:mm"),
+            return    : false
+          };
 
-            this.afs.collection("customers").doc(this.form.customer.id.toString())
-              .update(currentCustomer)
+          this.paymentProvider.create(payment)
+          .then(() => {
+            this.employeeProvider.ref().where("uid", "==", this.uid)
+            .get().then((res) => {
+              let oldEmployee: any = res.docChanges[0].doc.data()
 
-            //this.form.customer.more_price = parseFloat(this.form.customer.more_price)
-            let payment = {
-              customer  : this.form.customer,
-              amount    : this.form.amount,
-              oid       : newId,
-              eid       : this.afa.auth.currentUser.uid,
-              cid       : this.form.customer.id,
-              date      : moment().format("YYYY-MM-DD HH:mm"),
-              return    : false
-            };
-            
-            this.paymentProvider.create(payment).then(() => {
-              this.productsOnOrder
-              .forEach((product) => {
-                this.afs.collection("productsSales")
-                .add({
-                  employee_id: this.form.customer.eid,
-                  customer_id: this.form.customer.id,
-                  order_id: newId,
-                  price: product.price,
-                  qty: product.qty,
-                  category: product.category,
-                  product_id: product.id,
-                  date: moment().format("YYYY-MM-DD HH:mm")
-                })
-              })
-  
-              this.navCtrl.setRoot(HomePage)
-            })
-
-
-            //actualizar las ventas y pagos del dia del empleado
-            this.afs.collection("employees").ref.where("uid", "==", this.employee).get()
-            .then((res) => {
-              if(res.docChanges.length > 0) {
-                let oldDataEmployee = res.docChanges[0].doc.data()
-                
-                if(oldDataEmployee.paymentDate == moment().format("YYYY-MM-DD")) {
-                  oldDataEmployee.paymentsToday = parseFloat(oldDataEmployee.paymentsToday.toString()) + parseFloat(this.form.amount.toString())
-                  oldDataEmployee.salesToday = parseFloat(oldDataEmployee.salesToday) + parseFloat(this.form.total.toString())
-                } else {
-                  oldDataEmployee.paymentsToday = this.form.amount
-                  oldDataEmployee.salesToday = this.form.total
-                }
-                
-                oldDataEmployee.saleDay = moment().format("YYYY-MM-DD")
-                oldDataEmployee.paymentDate = moment().format("YYYY-MM-DD")
-
-                this.afs.collection("employees").doc(oldDataEmployee.id.toString())
-                .set(oldDataEmployee)
+              if(oldEmployee.paymentDate == moment().format("YYYY-MM-DD")) {
+                oldEmployee.paymentsToday = oldEmployee.paymentsToday + this.form.amount
+                oldEmployee.salesToday = oldEmployee.salesToday + this.form.total
+              } else {
+                oldEmployee.paymentsToday = this.form.amount
+                oldEmployee.salesToday = this.form.total
               }
+              oldEmployee.saleDay = moment().format("YYYY-MM-DD")
+              oldEmployee.paymentDate = moment().format("YYYY-MM-DD")
+
+              this.employeeProvider.update(oldEmployee, oldEmployee.id)
+              .then(() => {
+                this.productsOnOrder.forEach((product) => {
+                  this.afs.collection("productsSales")
+                  .add({
+                   // rid         : this.form.customer.rid,
+                    customer_id : this.form.customer.id,
+                    order_id    : newId,
+                    price       : product.price,
+                    qty         : product.qty,
+                    category    : product.category,
+                    product_id  : product.id,
+                    date        : moment().format("YYYY-MM-DD HH:mm")
+                  })
+                })
+    
+                this.navCtrl.setRoot(HomePage)
+              })
             })
-            //batch products info 
           })
-        }
+        })
       })
+
+
     } else {
       alert("Agregue un producto a la orden")
     }
