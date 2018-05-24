@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { NavController } from 'ionic-angular';
+import { NavController, AlertController } from 'ionic-angular';
 import { ActionSheetController } from 'ionic-angular';
 import { AngularFirestore, AngularFirestoreCollection } from "angularfire2/firestore";
 import { AngularFireAuth } from 'angularfire2/auth'
@@ -11,8 +11,12 @@ import { OrdersPage } from '../orders/orders'
 import { CreditsPage } from '../credits/credits'
 
 import { MapNavigationProvider } from '../../providers/map-navigation/map-navigation'
-import { Customer } from '../../providers/customer/customer';
-
+import { Customer, CustomerProvider } from '../../providers/customer/customer';
+import { StockProvider } from '../../providers/stock/stock';
+import moment from 'moment'
+import { AddStockPage } from '../add-stock/add-stock';
+import { RoutesProvider } from '../../providers/routes/routes';
+import { EmployeesProvider, Employee } from '../../providers/employees/employees';
 
 @Component({
   selector: 'page-home',
@@ -21,29 +25,63 @@ import { Customer } from '../../providers/customer/customer';
 })
 export class HomePage implements OnInit {
   public customersCollection: AngularFirestoreCollection<Customer>;
-  public customers: Observable<Customer[]>;
-  public customersOld: any;
+  public customers: Customer[] = []; 
+  public customersOld: Customer[] = [];
+  public currentEmployee: any = new Employee();
 
   constructor(
     public navCtrl: NavController, 
+    public stockService: StockProvider,
     public actionSheetCtrl: ActionSheetController, 
     private afs: AngularFirestore,
     private afa: AngularFireAuth,
+    public alertCtrl: AlertController,
+    public employeeService: EmployeesProvider,
+    public customerService: CustomerProvider,
     public MapNavigation: MapNavigationProvider) 
   {
 
   }
 
   ngOnInit() {
+    this.customers = [];
+
     this.afa.auth.onAuthStateChanged((res) => {
       if(res != null) {
+        let uid = this.afa.auth.currentUser.uid
+
+        this.stockService.ref()
+        .where("eid", "==", uid)
+        .where("date", "==", moment().format("Y-MM-DD"))
+        .get()
+        .then((res) => {
+          if(res.docChanges.length == 0) {
+            this.navCtrl.setRoot(AddStockPage)
+          }
+        })
+
+
         this.afs.collection("employees").ref.where("uid", "==", res.uid).get()
           .then((res) => {
             if(res.docChanges.length > 0) { 
-              let currentEmployee = res.docChanges[0].doc.data()
-              this.customersCollection = this.afs.collection("customers", ref => ref.where("rid", "==", parseInt(currentEmployee.rid)).orderBy("company", "asc"))
-              this.customers = this.customersCollection.valueChanges()
-              this.customersOld = Object.assign({}, this.customers);
+              this.currentEmployee = res.docChanges[0].doc.data()
+
+              this.customerService.ref()
+              .orderBy("company", "asc")
+              .where("rid", "==", parseInt(this.currentEmployee.rid))
+              .get()
+              .then((res) => {
+                if(res.docChanges.length > 0) {
+                  res.docChanges.forEach((doc: any) => {
+                    let customer = doc.doc.data()
+                    this.customers.push(customer)
+                  })
+
+                  this.customersOld = this.customers;
+                } else {
+                  this.customersOld = []
+                }
+              })
             }
           })
       }
@@ -97,20 +135,52 @@ export class HomePage implements OnInit {
     actionSheet.present();
   }
 
-  // getItems(ev: any) {
-  //   this.customers = this.customersOld
-  //   let val = ev.target.value;
+  changeRoute() {
+    let alert = this.alertCtrl.create();
+    alert.setTitle('Cambiar de ruta');
 
-  //   if (val && val.trim() != '') {
-  //     this.customers = this.customers.filter((item) => {
-  //       let answer = false;
-  //       item.filter((company) => {
-  //         answer = (company.company.toLowerCase().indexOf(val.toLowerCase()) > -1);
-  //         return answer
-  //       })
-  //       return answer
-  //     })
-  //   }
-  // }
+    RoutesProvider.routes.forEach((route) => {
+      alert.addInput({
+        type: 'radio',
+        label: route.name,
+        value: route.id.toString(),
+        checked: (route.id == this.currentEmployee.rid)
+      });
+      
+    })
+    
+
+    alert.addButton('Cancelar');
+    alert.addButton({
+      text: 'OK',
+      handler: data => {
+        if(this.currentEmployee.rid != data)
+          this.updateEmployee(data)
+      }
+    });
+    alert.present();
+  }
+  
+  updateEmployee(data) {
+    this.currentEmployee.rid = data
+    this.employeeService.update(this.currentEmployee, this.currentEmployee.id)
+    .then(() => {
+      this.ngOnInit()
+    })
+  }
+
+  getItems(ev: any) {
+    this.customers = this.customersOld
+    let val = ev.target.value;
+
+    if (val && val.trim() != '') {
+      if(this.customers.length > 0) {
+        this.customers = this.customers.filter((item) => {
+          let answer = false;
+          return (item.company.toLowerCase().indexOf(val.toLowerCase()) > -1)
+        })
+      }
+    }
+  }
 
 }

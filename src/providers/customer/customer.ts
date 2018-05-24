@@ -28,8 +28,11 @@ export class CustomerProvider {
     return this.db.collection(this.key).doc(id.toString()).set(Object.assign({}, customer))
   }
 
+  public ref() {
+    return this.db.collection(this.key).ref;
+  }
+
   public update(customer: Customer, id: number) {
-    console.log(customer)
     return this.db.collection(this.key).doc(id.toString()).set(Object.assign({}, customer))
   }
 

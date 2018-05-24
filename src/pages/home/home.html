@@ -4,13 +4,20 @@
       <ion-icon name="menu"></ion-icon>
     </button>
     <ion-title>Clientes</ion-title>
+
+    <ion-buttons end>
+      <button ion-button icon-only (click)="changeRoute()">
+        Ruta {{currentEmployee.rid}}
+        <ion-icon name="arrow-dropdown"></ion-icon>
+      </button>
+    </ion-buttons>
   </ion-navbar>
 </ion-header>
 
 <ion-content padding>
-  <!-- <ion-searchbar (ionInput)="getItems($event)"></ion-searchbar> -->
+    <ion-searchbar (ionInput)="getItems($event)"></ion-searchbar>
   <ion-list>
-    <button ion-item *ngFor="let customer of customers | async" (tap)="itemSelected(customer)">
+    <button ion-item *ngFor="let customer of customers" (tap)="itemSelected(customer)">
       <ion-avatar class="ion-avatar-icon" item-start>
         <ion-icon name="home"></ion-icon>
       </ion-avatar>

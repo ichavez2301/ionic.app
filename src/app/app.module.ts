@@ -34,6 +34,9 @@ import { PaymentProvider } from '../providers/payment/payment';
 import { config } from '../providers/firebase/firebase.config';
 import { EmployeesProvider } from '../providers/employees/employees';
 import { ProductsProvider } from '../providers/products/products';
+import { StockProvider } from '../providers/stock/stock';
+import { AddStockPageModule } from '../pages/add-stock/add-stock.module';
+import { RoutesProvider } from '../providers/routes/routes';
 
 @NgModule({
   declarations: [
@@ -55,6 +58,7 @@ import { ProductsProvider } from '../providers/products/products';
     ExpensesListPageModule,
     PaymentPageModule,
     PaymentsTodayPageModule,
+    AddStockPageModule,
 
     IonicModule.forRoot(MyApp),
     AngularFireModule.initializeApp(config),
@@ -79,7 +83,9 @@ import { ProductsProvider } from '../providers/products/products';
     ReturnsProvider,
     PaymentProvider,
     EmployeesProvider,
-    ProductsProvider
+    ProductsProvider,
+    StockProvider,
+    RoutesProvider
   ]
 })
 export class AppModule {}

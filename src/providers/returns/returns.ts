@@ -4,6 +4,7 @@ import { AngularFirestore } from 'angularfire2/firestore';
 
 export interface Return {
   id?: number
+  pid: number,
   category: string
   cid: number
   customer: Customer
@@ -21,6 +22,7 @@ export class ReturnsProvider {
   private key = "productsReturns"
 
   public async create(_return: Return) {
+    _return.pid = _return.id
     let id = await this.autoincrement()
     _return.id = parseInt(id.toString())
     return this.db.collection(this.key).doc(id.toString()).set(this.toArray(_return))
