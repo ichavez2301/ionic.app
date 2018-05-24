@@ -4,9 +4,6 @@ import { ActionSheetController } from 'ionic-angular';
 import { AngularFirestore, AngularFirestoreCollection } from "angularfire2/firestore";
 import { AngularFireAuth } from 'angularfire2/auth'
 
-import 'rxjs/add/operator/map'
-import { Observable } from 'rxjs/Observable';
-
 import { OrdersPage } from '../orders/orders'
 import { CreditsPage } from '../credits/credits'
 
@@ -176,7 +173,6 @@ export class HomePage implements OnInit {
     if (val && val.trim() != '') {
       if(this.customers.length > 0) {
         this.customers = this.customers.filter((item) => {
-          let answer = false;
           return (item.company.toLowerCase().indexOf(val.toLowerCase()) > -1)
         })
       }
