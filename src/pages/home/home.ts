@@ -152,7 +152,7 @@ export class HomePage implements OnInit {
       text: 'OK',
       handler: data => {
         if(this.currentEmployee.rid != data)
-          this.updateEmployee(data)
+          this.updateEmployee(parseInt(data))
       }
     });
     alert.present();

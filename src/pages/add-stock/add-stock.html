@@ -17,9 +17,8 @@
   <form>
     <ion-item *ngFor="let product of form.products">
       <ion-label floating>{{product.name}}</ion-label>
-      <ion-input type="number" [(ngModel)]="product.qty" name="product_qty" required="required"></ion-input>
+      <ion-input type="number" [(ngModel)]="product.qty" min="1" name="product_qty" required="required"></ion-input>
     </ion-item>
-
 
     <ion-fab right bottom (click)="sendStock()">
       <button ion-fab color="primary" [disabled]="disabledButton">

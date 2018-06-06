@@ -1,0 +1,45 @@
+<!--
+  Generated template for the CreateOrderPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar color="primary">
+    <ion-title></ion-title>
+
+    <ion-buttons start>
+      <button ion-button icon-only (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+  <form #orderForm="ngForm">
+    <ion-list>
+      <ion-item>
+        <ion-label floating>Recibí</ion-label>
+        <ion-input type="number" [(ngModel)]="form.data.amount" name="amount" [disabled]="form.data.orderType == 'contado'" required></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label floating>Total</ion-label>
+        <ion-input type="number" [(ngModel)]="form.data.total" name="total" disabled></ion-input>
+      </ion-item>
+      
+      <ion-item>
+        <ion-label floating>Resta</ion-label>
+        <ion-input type="number" disabled="true" name="balance" [value]="(form.data.total - form.data.amount)"></ion-input>
+      </ion-item>
+    </ion-list>
+  </form>
+  <ion-fab bottom right>
+    <button ion-fab (click)="ok()" [disabled]="orderForm.invalid">
+      <ion-icon name="send"></ion-icon>
+    </button>
+  </ion-fab>
+</ion-content>

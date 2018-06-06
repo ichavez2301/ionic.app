@@ -103,7 +103,7 @@ export class LossesPage {
       this.repayment.eid = this.afa.auth.currentUser.uid
       this.repayment.cid = this.customer.id.toString()
       this.repayment.oid = this.order.id.toString()
-      this.repayment.date = moment().format("YYYY-MM-DD hh:mm:ss")
+      this.repayment.date = moment().format("YYYY-MM-DD")
 
       this.repaymentProvider.create(this.repayment)
       .then(() => {
@@ -111,12 +111,15 @@ export class LossesPage {
         this.customer.balance = this.customer.balance - this.repayment.total
 
         this.customerProvider.update(this.customer, this.customer.id)
+        
+        this.order.balance = this.order.balance - this.repayment.total
         this.orderProvider.update(this.order, this.order.id)
+        
         this.products.forEach((product) => {
           product.customer  = this.customer
           product.cid       = this.customer.id.toString()
           product.eid       = this.afa.auth.currentUser.uid
-          product.date      = moment().format("YYYY-MM-DD hh:mm:ss")
+          product.date      = moment().format("YYYY-MM-DD")
 
           this.returnProvider.create(product)
         })
@@ -130,3 +133,4 @@ export class LossesPage {
 
   }
 }
+

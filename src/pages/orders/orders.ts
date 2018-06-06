@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, LoadingController } from 'ionic-angular';
 import { AngularFirestore, AngularFirestoreCollection } from "angularfire2/firestore";
 import { AngularFireAuth } from 'angularfire2/auth'
 import 'rxjs/add/operator/map'
@@ -13,6 +13,8 @@ import { Order, OrderProvider } from '../../providers/order/order';
 import { CustomerProvider } from '../../providers/customer/customer';
 import { EmployeesProvider } from '../../providers/employees/employees';
 import { Product } from '../../providers/products/products';
+import { FormGroup, FormControl } from '@angular/forms';
+import { CreateOrderPage } from '../create-order/create-order';
 /**
  * Generated class for the OrdersPage page.
  *
@@ -56,10 +58,12 @@ export class OrdersPage {
 
   public uid = null;  
   public productsOnOrder: Array<Product> = [];
-
+  
   constructor(
     public employeeProvider: EmployeesProvider,
+    public modal: ModalController,
     public orderProvider: OrderProvider,
+    public loadingCtrl: LoadingController,
     public customerProvider: CustomerProvider,
     public paymentProvider: PaymentProvider,
     public navCtrl: NavController, 
@@ -69,6 +73,7 @@ export class OrdersPage {
     private afs: AngularFirestore,
     private afa: AngularFireAuth
   ) {
+    
     this.form.customer  = this.navParams.data;
     this.uid            = this.afa.auth.currentUser.uid
   }
@@ -103,46 +108,28 @@ export class OrdersPage {
       alert("Seleccione al menos un producto")
       return
     }
-    
-    let myinputs = [];
-    if(this.form.orderType == 'credito') {
-      myinputs.push({
-        label: 'Recibí',
-        name: 'amount',
-        placeholder: "$",
-      })
-    }
 
-    let prompt = this.alertCtrl.create({
-      title: 'Terminar Pedido' ,
-      message: 'Total: $ ' + this.form.total.toString(),
-      inputs: myinputs,
-      buttons: [{
-        text: 'Cancelar',
-        handler: data => {
-          console.log('Cancel clicked');
-        }
-      }, {
-        text: 'Guardar',
-        handler: data => {
-          this.form.amount  = (this.form.orderType == 'credito') ? parseFloat(data.amount) : this.form.total;
-          if(this.form.amount >= 0) {
-            this.form.balance = parseFloat(this.form.total.toString()) - this.form.amount
-            this.saveOrder()
-          } else {
-            alert("Debe agregar una cantidad valida para continuar.")
-          }
-        }
-      }]
-    });
-    
-    prompt.present()
+    let orderModal = this.modal.create(CreateOrderPage, { data: this.form })
+    orderModal.onDidDismiss((result) => {
+      if(result) {
+        this.form = result
+        this.form.balance = this.form.total - this.form.amount
+        this.saveOrder()
+      }
+    })
+
+    orderModal.present()
   }
 
   saveOrder() {
     //guardar orden
     if(this.productsOnOrder.length > 0) {
-      
+
+      /* preloader */
+      let loader = this.loadingCtrl.create({ content: 'Guardando orden, espere porfavor...' })
+      loader.present()
+
+
       this.form.cid = this.form.customer.id
       this.form.products = this.productsOnOrder
       this.form.eid = this.uid
@@ -173,17 +160,18 @@ export class OrdersPage {
             this.employeeProvider.ref().where("uid", "==", this.uid)
             .get().then((res) => {
               let oldEmployee: any = res.docChanges[0].doc.data()
-
-              if(oldEmployee.paymentDate == moment().format("YYYY-MM-DD")) {
-                oldEmployee.paymentsToday = oldEmployee.paymentsToday + this.form.amount
-                oldEmployee.salesToday = oldEmployee.salesToday + this.form.total
+              
+              if(moment(oldEmployee.paymentDate).format("YYYY-MM-DD") == moment().format("YYYY-MM-DD")) {
+                oldEmployee.paymentsToday = parseFloat(oldEmployee.paymentsToday) + parseFloat(this.form.amount.toString())
+                oldEmployee.salesToday = parseFloat(oldEmployee.salesToday) + parseFloat(this.form.total.toString())
               } else {
                 oldEmployee.paymentsToday = this.form.amount
                 oldEmployee.salesToday = this.form.total
               }
+
               oldEmployee.saleDay = moment().format("YYYY-MM-DD")
               oldEmployee.paymentDate = moment().format("YYYY-MM-DD")
-
+              
               this.employeeProvider.update(oldEmployee, oldEmployee.id)
               .then(() => {
                 this.productsOnOrder.forEach((product) => {
@@ -192,6 +180,7 @@ export class OrdersPage {
                    // rid         : this.form.customer.rid,
                     customer_id : this.form.customer.id,
                     order_id    : newId,
+                    name        : product.name,
                     price       : product.price,
                     qty         : product.qty,
                     category    : product.category,
@@ -199,7 +188,8 @@ export class OrdersPage {
                     date        : moment().format("YYYY-MM-DD HH:mm")
                   })
                 })
-    
+                
+                loader.dismiss()
                 this.navCtrl.setRoot(HomePage)
               })
             })

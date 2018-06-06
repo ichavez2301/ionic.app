@@ -57,7 +57,7 @@
         </ion-item>
         <ion-item>
           <ion-label fixed>Cant.</ion-label>
-          <ion-input type="number" [(ngModel)]="product.qty" (keyup)="updateTotal($event)"></ion-input>
+          <ion-input type="number" [(ngModel)]="product.qty" min="1" (keyup)="updateTotal($event)"></ion-input>
         </ion-item>
       </ion-card-content>
     

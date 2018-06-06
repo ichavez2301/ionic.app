@@ -14,6 +14,7 @@ export class Employee {
   email: String;
   paymentDate: String;
   paymentsToday: number;
+  rid: number;
   phone: String;
   saleDay: String;
   salesToday: number;
@@ -29,7 +30,7 @@ export class EmployeesProvider {
   }
 
   update(data: Employee, id: number) {
-    return this.db.collection(this.key).doc(id.toString()).set(Object.assign({}, data))
+    return this.db.collection(this.key).doc(id.toString()).update({ rid: data.rid})
   }
   ref() {
     return this.db.collection(this.key).ref

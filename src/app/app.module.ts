@@ -37,12 +37,14 @@ import { ProductsProvider } from '../providers/products/products';
 import { StockProvider } from '../providers/stock/stock';
 import { AddStockPageModule } from '../pages/add-stock/add-stock.module';
 import { RoutesProvider } from '../providers/routes/routes';
+import { CreateOrderPage } from '../pages/create-order/create-order';
 
 @NgModule({
   declarations: [
     MyApp,
     HomePage,
-    ListPage
+    ListPage,
+    CreateOrderPage
   ],
   imports: [
     BrowserModule,
@@ -70,7 +72,8 @@ import { RoutesProvider } from '../providers/routes/routes';
   entryComponents: [
     MyApp,
     HomePage,
-    ListPage
+    ListPage,
+    CreateOrderPage
   ],
   providers: [
     StatusBar,
