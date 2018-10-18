@@ -4,6 +4,8 @@ import { AngularFirestore, AngularFirestoreCollection } from "angularfire2/fires
 import 'rxjs/add/operator/map'
 import { Observable } from 'rxjs/Observable';
 import { Product } from '../../providers/products/products';
+import { AngularFireAuth } from 'angularfire2/auth';
+import { StockProvider } from '../../providers/stock/stock';
 
 
 // import { FirebaseProvider } from '../../providers/firebase/firebase'
@@ -26,26 +28,39 @@ export class ProductsPage {
   order: any;
   isCollection: boolean = false;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams, public viewCtrl: ViewController, private afs: AngularFirestore) {
+  constructor(
+    public navCtrl: NavController,
+    private stock: StockProvider,
+    public navParams: NavParams, 
+    public viewCtrl: ViewController, 
+    private afs: AngularFirestore,
+    private afa: AngularFireAuth) {
     this.customer = this.navParams.get("customer")
     this.order    = this.navParams.get("order")
 
-    if(this.order != null) {
-      this.products = this.order.products
-    } else {
-      this.isCollection = true
-      this.productCollection = this.afs.collection("products")      
-      this.products = this.productCollection.valueChanges()
-    }
+    //mostrar solo productos que tengo en stock
+    this.stock.today(this.afa.auth.currentUser.uid).get()
+    .then((res: any) => {
+      if(res.docChanges.length > 0) {
+        //todo bien
+        this.products = res.docChanges[0].doc.data().products;
+      } else {
+        //no hay mercancias por vender. agregue mercancias
+      }
+    })
   }
   
   itemSelected(product) {
-    if(this.isCollection)
-      product.price = product.price - this.customer.discount
-    else 
-      product.price = product.price
-      
-    this.viewCtrl.dismiss(product)
+    if(parseInt(product.qty) > 0) {
+      if(this.isCollection)
+        product.price = product.price - this.customer.discount
+      else 
+        product.price = product.price
+        
+      this.viewCtrl.dismiss(product)
+    } else {
+      alert("No cuenta con stock de este producto.");
+    }
   }
 
   dismiss() {

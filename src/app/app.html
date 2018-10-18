@@ -6,6 +6,9 @@
   </ion-header>
 
   <ion-content>
+    <ion-row class="user-content">
+      {{user.email || ''}}
+    </ion-row>
     <ion-list>
       <button menuClose ion-item *ngFor="let p of pages" (tap)="openPage(p)">
         <ion-avatar class="ion-avatar-icon" item-start>

@@ -8,12 +8,13 @@ import { OrdersPage } from '../orders/orders'
 import { CreditsPage } from '../credits/credits'
 
 import { MapNavigationProvider } from '../../providers/map-navigation/map-navigation'
-import { Customer, CustomerProvider } from '../../providers/customer/customer';
-import { StockProvider } from '../../providers/stock/stock';
-import moment from 'moment'
+
 import { AddStockPage } from '../add-stock/add-stock';
 import { RoutesProvider } from '../../providers/routes/routes';
-import { EmployeesProvider, Employee } from '../../providers/employees/employees';
+
+import { SessionProvider } from '../../providers/session/session';
+import { Customer as LocalCustomer } from '../../classes/structs'
+import { Employee as LocalEmployee } from '../../classes/structs';
 
 @Component({
   selector: 'page-home',
@@ -21,112 +22,91 @@ import { EmployeesProvider, Employee } from '../../providers/employees/employees
 
 })
 export class HomePage implements OnInit {
-  public customersCollection: AngularFirestoreCollection<Customer>;
-  public customers: Customer[] = []; 
-  public customersOld: Customer[] = [];
-  public currentEmployee: any = new Employee();
+  
+  public customers: LocalCustomer[] = []; 
+  public customersOld: LocalCustomer[] = [];
+  
 
   constructor(
     public navCtrl: NavController, 
-    public stockService: StockProvider,
-    public actionSheetCtrl: ActionSheetController, 
-    private afs: AngularFirestore,
-    private afa: AngularFireAuth,
+    public actionSheetCtrl: ActionSheetController,
     public alertCtrl: AlertController,
-    public employeeService: EmployeesProvider,
-    public customerService: CustomerProvider,
+    
+    /** RECODING */
+    public localcustomer: LocalCustomer,
+    public employee: LocalEmployee,
+    public session: SessionProvider,
+    /** RECODING END */
+    
     public MapNavigation: MapNavigationProvider) 
   {
-
   }
 
-  ngOnInit() {
-    this.customers = [];
+  async ngOnInit() {
+    this.customers = []; //reiniciar variable para limpiar busqueda
 
-    this.afa.auth.onAuthStateChanged((res) => {
-      if(res != null) {
-        let uid = this.afa.auth.currentUser.uid
-
-        this.stockService.ref()
-        .where("eid", "==", uid)
-        .where("date", "==", moment().format("Y-MM-DD"))
-        .get()
-        .then((res) => {
-          if(res.docChanges.length == 0) {
-            this.navCtrl.setRoot(AddStockPage)
-          }
-        })
-
-
-        this.afs.collection("employees").ref.where("uid", "==", res.uid).get()
-          .then((res) => {
-            if(res.docChanges.length > 0) { 
-              this.currentEmployee = res.docChanges[0].doc.data()
-
-              this.customerService.ref()
-              .orderBy("company", "asc")
-              .where("rid", "==", parseInt(this.currentEmployee.rid))
-              .get()
-              .then((res) => {
-                if(res.docChanges.length > 0) {
-                  res.docChanges.forEach((doc: any) => {
-                    let customer = doc.doc.data()
-                    this.customers.push(customer)
-                  })
-
-                  this.customersOld = this.customers;
-                } else {
-                  this.customersOld = []
-                }
-              })
-            }
-          })
+    if(await this.session.exists()) {
+      await this.employee.setByIUD(this.session.CurrentUser.uid)
+      if(await this.employee.hasStockToday()) {
+        this.LoadCustomerList();
+      } else {
+        this.showWindowAddStock();
       }
-    })      
+    }   
+  }
+  
+  LoadCustomerList() {
+    this.employee.getMyCustomerList()
+    .then((res:any) => {
+      this.customers = res
+      this.customersOld = res
+    });
+  }
+
+  showWindowAddStock() {
+    this.navCtrl.setRoot(AddStockPage)
   }
 
   itemSelected(customer) {
     let actionSheet = this.actionSheetCtrl.create({
       title: 'Opciones',
-      buttons: [
-        {
-          icon: 'list-box',
-          text: 'Nuevo Pedido',
-          role: 'destructive',
-          handler: () => {
-            if(parseFloat(customer.balance) >= parseFloat(customer.limit_credit)) {
-              alert("Este cliente ha superdado su limite de credito.")
-            } else {
-              this.navCtrl.push(OrdersPage, customer)
-            }
-          }
-        }, 
-        {
-          icon: 'card',
-          text: 'Notas de credito',
-          handler: () => {
-            if(customer.balance > 0)
-              this.navCtrl.push(CreditsPage, customer)
-            else
-              alert("El cliente no cuenta con adeudo!")
-          }
-        }, 
-        {
-          icon: 'map',
-          text: 'Mapa',
-          handler: () => {
-            if(customer.address != '')
-              this.MapNavigation.open({address: customer.address })
-          }
-        },{
-          icon: 'close',
-          text: 'Cancelar',
-          role: 'cancel',
-          handler: () => {
-            console.log('Cancel clicked');
+      buttons: [{
+        icon: 'list-box',
+        text: 'Nuevo Pedido',
+        role: 'destructive',
+        handler: () => {
+          if(parseFloat(customer.balance) >= parseFloat(customer.limit_credit)) {
+            alert("Este cliente ha superdado su limite de credito.")
+          } else {
+            this.navCtrl.push(OrdersPage, customer)
           }
         }
-      ]
+      }, 
+      {
+        icon: 'card',
+        text: 'Notas de crédito',
+        handler: () => {
+          if(customer.balance > 0)
+            this.navCtrl.push(CreditsPage, customer)
+          else
+            alert("El cliente no cuenta con adeudo!")
+        }
+      }, 
+      {
+        icon: 'map',
+        text: 'Mapa',
+        handler: () => {
+          if(customer.address != '')
+            this.MapNavigation.open({address: customer.address })
+        }
+      },{
+        icon: 'close',
+        text: 'Cancelar',
+        role: 'cancel',
+        handler: () => {
+          console.log('Cancel clicked');
+        }
+      }]
     })
 
     actionSheet.present();
@@ -141,7 +121,7 @@ export class HomePage implements OnInit {
         type: 'radio',
         label: route.name,
         value: route.id.toString(),
-        checked: (route.id == this.currentEmployee.rid)
+        checked: (route.id == this.employee.rid)
       });
       
     })
@@ -151,7 +131,7 @@ export class HomePage implements OnInit {
     alert.addButton({
       text: 'OK',
       handler: data => {
-        if(this.currentEmployee.rid != data)
+        if(this.employee.rid != data)
           this.updateEmployee(parseInt(data))
       }
     });
@@ -159,14 +139,11 @@ export class HomePage implements OnInit {
   }
   
   updateEmployee(data) {
-    this.currentEmployee.rid = data
-    this.employeeService.update(this.currentEmployee, this.currentEmployee.id)
-    .then(() => {
-      this.ngOnInit()
-    })
+    this.employee.rid = data
+    this.employee.update().then(() => { this.ngOnInit(); })
   }
 
-  getItems(ev: any) {
+  getItems(ev: any) { //evento para busqueda
     this.customers = this.customersOld
     let val = ev.target.value;
 

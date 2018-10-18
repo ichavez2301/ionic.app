@@ -22,6 +22,10 @@
 <ion-content padding>
   <form #orderForm="ngForm">
     <ion-list>
+      <ion-item *ngIf="form.data.orderType == 'credito'">
+        <ion-label floating>Folio nota credito</ion-label>
+        <ion-input type="number" [(ngModel)]="form.data.folio" name="folio" required></ion-input>
+      </ion-item>
       <ion-item>
         <ion-label floating>Recibí</ion-label>
         <ion-input type="number" [(ngModel)]="form.data.amount" name="amount" [disabled]="form.data.orderType == 'contado'" required></ion-input>

@@ -20,22 +20,24 @@
 
 
 <ion-content padding>
-  <ion-list *ngIf="!isCollection">
+  <div *ngIf="!isCollection">
+    <ion-list>
+      <button ion-item *ngFor="let product of products" (tap)="itemSelected(product)">
+        <ion-avatar class="ion-avatar-icon" item-start>
+          <ion-icon name="pricetag"></ion-icon>
+        </ion-avatar>
+        <h2>{{ product.name}} ({{product.qty}} PZAS)</h2>
+        <h3>Precio ${{_parseFloat(product.price) - _parseFloat(customer.discount)}}</h3>
+      </button> 
+    </ion-list>
+  </div>
+
+  <ion-list *ngIf="isCollection">
     <button ion-item *ngFor="let product of products" (tap)="itemSelected(product)">
       <ion-avatar class="ion-avatar-icon" item-start>
         <ion-icon name="pricetag"></ion-icon>
       </ion-avatar>
-      <h2>{{ product.name}}</h2>
-      <h3>Precio ${{_parseFloat(product.price) - _parseFloat(customer.discount)}}</h3>
-    </button> 
-  </ion-list>
-
-  <ion-list *ngIf="isCollection">
-    <button ion-item *ngFor="let product of products | async" (tap)="itemSelected(product)">
-      <ion-avatar class="ion-avatar-icon" item-start>
-        <ion-icon name="pricetag"></ion-icon>
-      </ion-avatar>
-      <h2>{{product.name}}</h2>
+      <h2>{{product.name}} </h2>
       <h3>Precio ${{_parseFloat(product.price) - _parseFloat(customer.discount)}}</h3>
     </button> 
   </ion-list>

@@ -19,7 +19,7 @@ export class MyApp {
 
   rootPage: any = HomePage;
   pages: Array<{title: string, component: any, icon: string}>;
-
+  user: any = { email: '' }
   constructor(
     public platform: Platform, 
     public statusBar: StatusBar, 
@@ -27,7 +27,6 @@ export class MyApp {
     public afa: AngularFireAuth) {
 
     this.initializeApp();
-    
     // used for an example of ngFor and navigation
     this.pages = [
       { title: 'Clientes', component: HomePage, icon: 'contact' },
@@ -42,6 +41,10 @@ export class MyApp {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
       this.afa.auth.onAuthStateChanged(res => {
+        let user = this.afa.auth.currentUser
+        if(user)
+          this.user = user
+        
         if(res == null) {
            this.nav.setRoot(LoginPage);
         }

@@ -13,14 +13,8 @@ import { Order, OrderProvider } from '../../providers/order/order';
 import { CustomerProvider } from '../../providers/customer/customer';
 import { EmployeesProvider } from '../../providers/employees/employees';
 import { Product } from '../../providers/products/products';
-import { FormGroup, FormControl } from '@angular/forms';
 import { CreateOrderPage } from '../create-order/create-order';
-/**
- * Generated class for the OrdersPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
+import { Order as LocalOrder } from '../../classes/structs';
 
 
 @IonicPage()
@@ -29,32 +23,12 @@ import { CreateOrderPage } from '../create-order/create-order';
   templateUrl: 'orders.html',
 })
 export class OrdersPage {
+  /** NEWEST CODE */
+  public form: LocalOrder = new LocalOrder();
+  /** NEWEST CODE */
+  
   public orderCollection: AngularFirestoreCollection<Order>
   
-  public form: Order = { 
-    customer: {
-      rid: 0,
-      address: "",
-      balance: 0,
-      company: "",
-      contact: "",
-      eid: 0,
-      email: "",
-      id: 0,
-      limit_credit: 0,
-      discount: 0,
-      phone: "",
-      postal_code: ""
-    },
-    products: [],
-    eid: "",
-    cid: 0,
-    date: moment().format("YYYY-MM-DD"),
-    orderType: "contado",
-    total: 0,
-    balance: 0,
-    amount: 0
-  };
 
   public uid = null;  
   public productsOnOrder: Array<Product> = [];
@@ -84,6 +58,7 @@ export class OrdersPage {
     modal.present();
     modal.onDidDismiss((product) => {
       if(product) {
+        product["stock"] = product["qty"];
         product["qty"] = 1;
         this.productsOnOrder.push(product)
         this.updateTotal()
@@ -94,7 +69,14 @@ export class OrdersPage {
   updateTotal() {
     this.form.total = 0
     for(let index in this.productsOnOrder) {
-      this.form.total += this.productsOnOrder[index].price * this.productsOnOrder[index].qty; 
+      if(this.productsOnOrder[index].qty.toString() != "") {
+        if(parseInt(this.productsOnOrder[index].qty.toString()) <= parseInt(this.productsOnOrder[index].stock.toString())) {
+          this.form.total += this.productsOnOrder[index].price * this.productsOnOrder[index].qty; 
+        } else {
+          alert("Has agregado una cantidad que supera a tu stock (" + this.productsOnOrder[index].name + ")")
+          this.productsOnOrder[index].qty = this.productsOnOrder[index].stock
+        }
+      }
     }
   }
   
@@ -139,8 +121,8 @@ export class OrdersPage {
       //actualizar saldo empleado
       this.orderProvider.create(this.form)
       .then((res: any) => {
-        let newId :number = this.orderProvider.lastInsertId();
-        let currentCustomer = this.form.customer
+        let newId :number       = this.orderProvider.lastInsertId();
+        let currentCustomer     = this.form.customer
         currentCustomer.balance = currentCustomer.balance + this.form.balance
         
         this.customerProvider.update(currentCustomer, this.form.customer.id)
@@ -151,6 +133,7 @@ export class OrdersPage {
             oid       : newId,
             eid       : this.uid,
             cid       : this.form.customer.id,
+            folio     : this.form.folio,
             date      : moment().format("YYYY-MM-DD HH:mm"),
             return    : false
           };
@@ -158,18 +141,25 @@ export class OrdersPage {
           this.paymentProvider.create(payment)
           .then(() => {
             this.employeeProvider.ref().where("uid", "==", this.uid)
-            .get().then((res) => {
-              let oldEmployee: any = res.docChanges[0].doc.data()
-              
-              if(moment(oldEmployee.paymentDate).format("YYYY-MM-DD") == moment().format("YYYY-MM-DD")) {
-                oldEmployee.paymentsToday = parseFloat(oldEmployee.paymentsToday) + parseFloat(this.form.amount.toString())
-                oldEmployee.salesToday = parseFloat(oldEmployee.salesToday) + parseFloat(this.form.total.toString())
+            .get()
+            .then((res) => {
+              let oldEmployee: any    = res.docChanges[0].doc.data()
+              let oldPaymentDate      = moment(oldEmployee.paymentDate).format("YYYY-MM-DD")
+              let currentPaymentDate  = moment().format("YYYY-MM-DD")
+              if(oldEmployee.paymentsToday != null) {
+                if(oldPaymentDate == currentPaymentDate) {
+                  oldEmployee.paymentsToday = parseFloat(oldEmployee.paymentsToday) + parseFloat(this.form.amount.toString())
+                  oldEmployee.salesToday    = parseFloat(oldEmployee.salesToday) + parseFloat(this.form.total.toString())
+                } else {
+                  oldEmployee.paymentsToday = this.form.amount
+                  oldEmployee.salesToday    = this.form.total
+                }
               } else {
                 oldEmployee.paymentsToday = this.form.amount
-                oldEmployee.salesToday = this.form.total
+                oldEmployee.salesToday    = this.form.total
               }
 
-              oldEmployee.saleDay = moment().format("YYYY-MM-DD")
+              oldEmployee.saleDay     = moment().format("YYYY-MM-DD")
               oldEmployee.paymentDate = moment().format("YYYY-MM-DD")
               
               this.employeeProvider.update(oldEmployee, oldEmployee.id)
@@ -177,7 +167,7 @@ export class OrdersPage {
                 this.productsOnOrder.forEach((product) => {
                   this.afs.collection("productsSales")
                   .add({
-                   // rid         : this.form.customer.rid,
+                    // rid         : this.form.customer.rid,
                     customer_id : this.form.customer.id,
                     order_id    : newId,
                     name        : product.name,

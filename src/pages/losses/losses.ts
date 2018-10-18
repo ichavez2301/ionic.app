@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, AlertController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, AlertController, LoadingController } from 'ionic-angular';
 import { HomePage } from '../home/home';
 import { ProductsPage } from '../products/products';
 import moment from 'moment';
@@ -35,6 +35,7 @@ export class LossesPage {
     public navParams: NavParams, 
     public modalCtrl: ModalController, 
     public alertCtrl: AlertController,
+    private loadingCtrl: LoadingController,
     private afa: AngularFireAuth
   ) 
   {
@@ -104,28 +105,38 @@ export class LossesPage {
       this.repayment.cid = this.customer.id.toString()
       this.repayment.oid = this.order.id.toString()
       this.repayment.date = moment().format("YYYY-MM-DD")
+      
+      const loader = this.loadingCtrl.create({
+        content: "Espere porfavor...",
+        duration: 3000
+      });
+      loader.present();
 
       this.repaymentProvider.create(this.repayment)
       .then(() => {
         //logica de negocios de devoluciones
         this.customer.balance = this.customer.balance - this.repayment.total
-
         this.customerProvider.update(this.customer, this.customer.id)
         
         this.order.balance = this.order.balance - this.repayment.total
-        this.orderProvider.update(this.order, this.order.id)
-        
-        this.products.forEach((product) => {
-          product.customer  = this.customer
-          product.cid       = this.customer.id.toString()
-          product.eid       = this.afa.auth.currentUser.uid
-          product.date      = moment().format("YYYY-MM-DD")
-
-          this.returnProvider.create(product)
+        let counter = 0
+        this.orderProvider.update(this.order, this.order.id).then(() => {
+          this.products.forEach((product) => {
+            product.customer  = this.customer
+            product.cid       = this.customer.id.toString()
+            product.eid       = this.afa.auth.currentUser.uid
+            product.date      = moment().format("YYYY-MM-DD") 
+            
+            counter++
+            this.returnProvider.create(product)
+            .then(() => {
+              if(counter == this.products.length) {
+                this.navCtrl.setRoot(HomePage)
+                loader.dismiss()
+              }
+            })
+          })
         })
-        //add product return
-
-        this.navCtrl.setRoot(HomePage)
       })
     } else  {
       alert("Agregue al menos un producto para continuar.")

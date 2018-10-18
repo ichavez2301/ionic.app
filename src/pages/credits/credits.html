@@ -18,7 +18,7 @@
 <ion-content padding>
   <ion-list>
       <ion-item *ngFor="let order of Orders | async" (tap)="asheet(order)">
-        <h2>C{{order.id}} / {{order.customer.company}}</h2>
+        <h2>{{order.folio || 'C' + order.id}} / {{order.customer.company}}</h2>
         <h3>{{order.date}}</h3>
         <p>$ {{order.balance}}</p>
       </ion-item>

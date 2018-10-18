@@ -28,6 +28,7 @@ export class PaymentPage {
   }
   public currentOrder:any;
   public customer:any;
+  public typeOrder: string = "";
 
   constructor(
     public paymentProvider: PaymentProvider,
@@ -37,10 +38,12 @@ export class PaymentPage {
     public navParams: NavParams, 
     private afs: AngularFirestore, 
     private afa: AngularFireAuth) {
+    
     this.form.balance = this.navParams.data.order.balance
     this.form.orderId = this.navParams.data.order.id
     this.customer     = this.navParams.data.customer
     this.currentOrder = this.navParams.data.order
+    this.typeOrder    = this.navParams.data.orderType
   }
 
   public doPayment() {

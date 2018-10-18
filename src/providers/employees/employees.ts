@@ -30,7 +30,7 @@ export class EmployeesProvider {
   }
 
   update(data: Employee, id: number) {
-    return this.db.collection(this.key).doc(id.toString()).update({ rid: data.rid})
+    return this.db.collection(this.key).doc(id.toString()).update(data)
   }
   ref() {
     return this.db.collection(this.key).ref

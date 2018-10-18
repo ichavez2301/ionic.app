@@ -38,6 +38,8 @@ import { StockProvider } from '../providers/stock/stock';
 import { AddStockPageModule } from '../pages/add-stock/add-stock.module';
 import { RoutesProvider } from '../providers/routes/routes';
 import { CreateOrderPage } from '../pages/create-order/create-order';
+import { Customer, Employee } from '../classes/structs';
+import { SessionProvider } from '../providers/session/session';
 
 @NgModule({
   declarations: [
@@ -49,7 +51,6 @@ import { CreateOrderPage } from '../pages/create-order/create-order';
   imports: [
     BrowserModule,
     HttpModule,
-
     LoginPageModule,
     OrdersPageModule,
     ProductsPageModule,
@@ -88,7 +89,10 @@ import { CreateOrderPage } from '../pages/create-order/create-order';
     EmployeesProvider,
     ProductsProvider,
     StockProvider,
-    RoutesProvider
+    RoutesProvider,
+    Customer,
+    Employee,
+    SessionProvider
   ]
 })
 export class AppModule {}

@@ -7,6 +7,7 @@ export class Order {
   amount: number
   balance: number
   cid: number
+  folio: number
   customer: Customer
   date?: string
   eid: string

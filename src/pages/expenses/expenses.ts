@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ViewController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ViewController, LoadingController } from 'ionic-angular';
 import { AngularFirestore } from 'angularfire2/firestore'
 import { AngularFireAuth } from 'angularfire2/auth'
 import { Observable } from 'rxjs/Observable'
@@ -42,6 +42,7 @@ export class ExpensesPage  {
     public navParams: NavParams, 
     public viewCtrl: ViewController, 
     private afs: AngularFirestore, 
+    private loadingCtrl: LoadingController,
     private afa: AngularFireAuth) 
   {
     
@@ -49,6 +50,13 @@ export class ExpensesPage  {
 
   doSave() {
     if(this.form.description != "" && this.form.amount > 0) {
+      
+      const loader = this.loadingCtrl.create({
+        content: "Espere porfavor...",
+        duration: 3000
+      });
+      loader.present();
+
       this.afs.collection("expenses").ref.orderBy("id", "desc").limit(1)
         .get()
         .then((res) => {
@@ -74,7 +82,7 @@ export class ExpensesPage  {
                 this.afs.collection("employees").doc(res.docChanges[0].doc.id).set(currentEmployee)
               }
             })
-
+            loader.dismiss()
             this.viewCtrl.dismiss(this.form);
         })
     } else {

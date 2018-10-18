@@ -7,7 +7,7 @@
 
     <ion-buttons end>
       <button ion-button icon-only (click)="changeRoute()">
-        Ruta {{currentEmployee.rid}}
+        Ruta {{employee.rid}}
         <ion-icon name="arrow-dropdown"></ion-icon>
       </button>
     </ion-buttons>
@@ -16,7 +16,7 @@
 
 <ion-content padding>
     <ion-searchbar (ionInput)="getItems($event)"></ion-searchbar>
-  <ion-list>
+  <ion-list no-lines>
     <button ion-item *ngFor="let customer of customers" (tap)="itemSelected(customer)">
       <ion-avatar class="ion-avatar-icon" item-start>
         <ion-icon name="home"></ion-icon>

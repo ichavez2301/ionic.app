@@ -7,9 +7,9 @@
 <ion-header>
 
   <ion-navbar color="primary">
-    <ion-title>Pedido</ion-title>
+    <ion-title>Orden de compra</ion-title>
     <ion-buttons end>
-      <button ion-button icon-only (tap)="doSale()">
+      <button ion-button [disabled]="orderForm.invalid" icon-only (tap)="doSale()">
         <ion-icon name="checkmark"></ion-icon>
       </button>
     </ion-buttons>
@@ -18,24 +18,24 @@
 </ion-header>
 
 
-<ion-content>
+<ion-content padding>
   <ion-item>
-    <ion-label fixed>Cliente</ion-label>
+    <ion-label floating>Cliente</ion-label>
     <ion-input type="text" [(ngModel)]="form.customer.company" disabled></ion-input>
   </ion-item>
   <ion-item>
-    <ion-label fixed>Fecha</ion-label>
+    <ion-label floating>Fecha</ion-label>
     <ion-input type="text" [(ngModel)]="form.date" disabled></ion-input>
   </ion-item>
   <ion-item>
-    <ion-label fixed>Venta a</ion-label>
+    <ion-label floating>Venta a</ion-label>
     <ion-select [(ngModel)]="form.orderType">
       <ion-option value="contado" selected>Contado</ion-option>
       <ion-option value="credito">Credito</ion-option>
     </ion-select>
   </ion-item>
   <ion-item>
-    <ion-label fixed>Total</ion-label>
+    <ion-label floating>Total</ion-label>
     <ion-input type="text" [(ngModel)]="form.total" disabled></ion-input>
   </ion-item>
 
@@ -46,30 +46,33 @@
   </ion-fab>
 
   <div>
-    <ion-card *ngFor="let product of productsOnOrder; let i = index">
-      <ion-item>
-        <h2>{{product.name}}</h2>
-      </ion-item>
-    
-      <ion-card-content>
+    <form #orderForm="ngForm">
+      <ion-card *ngFor="let product of productsOnOrder; let i = index">
         <ion-item>
-          {{product.price}} x {{product.qty}} = {{product.price * product.qty}}
+          <h2>{{product.name}}</h2>
+          <p>$ {{product.price}} x {{product.qty}} = {{product.price * product.qty}}</p>
         </ion-item>
-        <ion-item>
-          <ion-label fixed>Cant.</ion-label>
-          <ion-input type="number" [(ngModel)]="product.qty" min="1" (keyup)="updateTotal($event)"></ion-input>
-        </ion-item>
-      </ion-card-content>
-    
-      <ion-row>
-        <ion-col>
-          <button ion-button icon-left small (tap)="deleteItem(i)" color="danger">
-            <ion-icon name="trash"></ion-icon>
-            <div>Eliminar</div>
-          </button>
-        </ion-col>
-      </ion-row>
-    
-    </ion-card>
+      
+        <ion-card-content>
+          <ion-item>
+            {{product.price}} x {{product.qty}} = {{product.price * product.qty}}
+          </ion-item>
+          <ion-item>
+            <ion-label fixed>Cant.</ion-label>
+            <ion-input type="number" name="productOrder" [(ngModel)]="product.qty" min="1" [max]="product.stock" (keyup)="updateTotal($event)"></ion-input>
+          </ion-item>
+        </ion-card-content>
+      
+        <ion-row>
+          <ion-col>
+            <button ion-button icon-left small (tap)="deleteItem(i)" color="danger">
+              <ion-icon name="trash"></ion-icon>
+              <div>Eliminar</div>
+            </button>
+          </ion-col>
+        </ion-row>
+        
+      </ion-card>
+    </form>
   </div>
 </ion-content>

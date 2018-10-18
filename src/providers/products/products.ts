@@ -13,6 +13,7 @@ export class Product {
   public category: String;
   public price: number;
   public qty: number = 0;
+  public stock: number = 0;
 }
 
 @Injectable()

@@ -25,7 +25,7 @@ export class ReturnsProvider {
     _return.pid = _return.id
     let id = await this.autoincrement()
     _return.id = parseInt(id.toString())
-    return this.db.collection(this.key).doc(id.toString()).set(this.toArray(_return))
+    return this.db.collection(this.key).add(Object.assign({}, _return))
   }
 
   public async autoincrement() : Promise<Number>  {

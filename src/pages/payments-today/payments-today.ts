@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { PaymentProvider, Payment } from "../../providers/payment/payment";
 import * as _ from 'lodash'
+import { AngularFireAuth } from 'angularfire2/auth';
 
 /**
  * Generated class for the PaymentsTodayPage page.
@@ -21,13 +22,14 @@ export class PaymentsTodayPage implements OnInit {
   constructor(
     public navCtrl: NavController, 
     public navParams: NavParams, 
+    private afa: AngularFireAuth,
     private paymentProvider: PaymentProvider) {
   }
 
   ngOnInit() {
     let payments: Array<any> = [];
-
-    this.paymentProvider.SoldToday()
+    let uid = this.afa.auth.currentUser.uid;
+    this.paymentProvider.SoldToday(uid)
     .then((res) => {
       res.docChanges.forEach((change) => {
         let payment = change.doc.data()

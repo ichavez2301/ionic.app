@@ -61,8 +61,12 @@ export class PaymentProvider {
     return ai
   }
 
-  public SoldToday() {
-    return this.db.collection(this.key).ref.where("date", ">=", moment().format("Y-MM-DD 00:00")).where("date", "<=", moment().format("Y-MM-DD 23:59")).get()
+  public SoldToday(uid: string) {
+    return this.db.collection(this.key).ref
+      .where("eid", "==", uid)
+      .where("date", ">=", moment().format("Y-MM-DD 00:00"))
+      .where("date", "<=", moment().format("Y-MM-DD 23:59"))
+      .get()
   }
 
   public toArray(payment: Payment) {
