@@ -26,24 +26,27 @@ export class MyApp {
     public statusBar: StatusBar, 
     public splashScreen: SplashScreen, 
     public afa: AngularFireAuth) {
-      
-      this.statusBar.overlaysWebView(true);
-      this.statusBar.backgroundColorByHexString('#AD1457');
-      this.statusBar.styleLightContent();
-
-    this.initializeApp();
-    // used for an example of ngFor and navigation
-    this.pages = [
-      { title: 'Clientes', component: HomePage, icon: 'contact' },
-      { title: 'Gastos', component: ExpensesListPage, icon: 'exit' },
-      { title: 'Pagos', component: PaymentsTodayPage, icon: 'cash' },
-      { title: 'My stock', component: StockPage, icon: 'cube' }
-    ];
+        
+      this.initializeApp();
+      // used for an example of ngFor and navigation
+      this.pages = [
+        { title: 'Clientes', component: HomePage, icon: 'contact' },
+        { title: 'Gastos', component: ExpensesListPage, icon: 'exit' },
+        { title: 'Pagos', component: PaymentsTodayPage, icon: 'cash' },
+        { title: 'My stock', component: StockPage, icon: 'cube' }
+      ];
 
   }
 
   initializeApp() {
     this.platform.ready().then(() => {
+
+      //  if(this.platform.is("cordova") || this.platform.is("android")) {
+      //   this.statusBar.overlaysWebView(true);
+      //   this.statusBar.backgroundColorByHexString('#D81B60');
+      //   this.statusBar.styleLightContent()
+      //  }
+
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
       this.afa.auth.onAuthStateChanged(res => {
@@ -51,12 +54,11 @@ export class MyApp {
         if(user)
           this.user = user
         
-        if(res == null) {
+        if(res == null) 
            this.nav.setRoot(LoginPage);
-        }
       })
 
-      this.statusBar.styleDefault();
+      //this.statusBar.styleDefault();
       this.splashScreen.hide();
     });
   }

@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams, ModalController, AlertController, LoadingController } from 'ionic-angular';
-import { HomePage } from '../home/home';
 import { ProductsPage } from '../products/products';
 import moment from 'moment';
 import { AngularFireAuth } from "angularfire2/auth";
@@ -9,7 +8,7 @@ import { CustomerProvider, Customer } from '../../providers/customer/customer'
 import { OrderProvider } from '../../providers/order/order';
 import { ReturnsProvider } from '../../providers/returns/returns'
 import { ReturnModePage } from '../return-mode/return-mode';
-import { Repayment, Stock } from '../../classes/structs';
+import { Repayment } from '../../classes/structs';
 
 @IonicPage()
 @Component({
