@@ -9,7 +9,7 @@
   <ion-navbar color="primary">
     <ion-title>Registro de Mermas</ion-title>
     <ion-buttons end>
-      <button (tap)="saveRepayment()" ion-button icon-only>
+      <button (tap)="saveRepayment()" [disabled]="disabled" ion-button icon-only>
         <ion-icon name="checkmark"></ion-icon>
       </button>
     </ion-buttons>
@@ -20,18 +20,23 @@
 <ion-content padding>
   <ion-list>
     <ion-item>
-      <ion-label>Fecha</ion-label>
+      <ion-label floating>Fecha</ion-label>
       <ion-input [(ngModel)]="repayment.date" disabled></ion-input>
     </ion-item>
     <ion-item>
-      <ion-label>Devolucion</ion-label>
+      <ion-label floating>Devolucion</ion-label>
       <ion-input [(ngModel)]="repayment.total" disabled></ion-input>
     </ion-item>
 
-    <div style="height: 80px;"></div>
-    <ion-item *ngFor="let product of products">
+    <!-- <div style="height: 80px;"></div> -->
+    <ion-item *ngFor="let product of repayment.products; let i = index">
       <ion-label floating>{{product.name}}</ion-label>
       <ion-input type="number" [(ngModel)]="product.qty" [max]="_parseFloat(product.qty)" (keyup)="validateQty(product)"></ion-input>
+      
+      
+      <button item-end ion-fab color="danger" mini (tap)="deleteItem(i)">
+        <ion-icon name="trash"></ion-icon>
+      </button>
     </ion-item>
   </ion-list>
 

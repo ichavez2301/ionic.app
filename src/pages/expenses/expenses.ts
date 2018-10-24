@@ -1,15 +1,11 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams, ViewController, LoadingController } from 'ionic-angular';
-import { AngularFirestore } from 'angularfire2/firestore'
-import { AngularFireAuth } from 'angularfire2/auth'
 import { Observable } from 'rxjs/Observable'
 import moment from 'moment'
-/**
- * Generated class for the ExpensesPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
+
+import { Expense as LocalExpense } from '../../classes/structs'
+import { SessionProvider } from '../../providers/session/session';
+
 interface Expense {
   id: number,
   amount: number,
@@ -25,66 +21,39 @@ interface Expense {
   templateUrl: 'expenses.html',
 })
 export class ExpensesPage  {
-  //public expensesCollection: AngularFirestoreCollection<Expense>;
   public expenses: Observable<Expense[]>;
-
-  public form: Expense = {
-    id: 0,
-    description: "Gasolina",
-    amount: 0,
-    eid: "",
-    date: "",
-    time: ""
-  };
-
+ 
   constructor(
     public navCtrl: NavController, 
     public navParams: NavParams, 
     public viewCtrl: ViewController, 
-    private afs: AngularFirestore, 
     private loadingCtrl: LoadingController,
-    private afa: AngularFireAuth) 
+
+    public expense: LocalExpense,
+    public session: SessionProvider) 
   {
     
   }
 
   doSave() {
-    if(this.form.description != "" && this.form.amount > 0) {
+    if(this.expense.description != "" && this.expense.amount > 0) {
       
       const loader = this.loadingCtrl.create({
         content: "Espere porfavor...",
         duration: 3000
       });
+
       loader.present();
+      this.expense.eid = this.session.CurrentUser.uid
+      this.expense.date = moment().format("Y-MM-DD")
+      this.expense.time = moment().format("hh:mm:ss")
+      
+      this.expense.save()
+      .then(() => {
+        loader.dismiss()
+        this.viewCtrl.dismiss(this.expense);
+      })
 
-      this.afs.collection("expenses").ref.orderBy("id", "desc").limit(1)
-        .get()
-        .then((res) => {
-          let keyId = 1          
-          if(res.docChanges.length > 0) 
-            keyId = parseInt(res.docChanges[0].doc.data().id) + 1
-
-            this.form.id   = keyId
-            this.form.eid  = this.afa.auth.currentUser.uid
-            this.form.date = moment().format("Y-MM-DD")
-            this.form.time = moment().format("hh:mm:ss")
-
-            this.afs.collection("employees").ref.where("uid", "==", this.afa.auth.currentUser.uid).get()
-            .then((res) => {
-              if(res.docChanges.length > 0) {
-                let currentEmployee = res.docChanges[0].doc.data()
-
-                this.form["employee"] = currentEmployee
-                this.afs.collection("expenses").doc(keyId.toString())
-                .set(this.form)
-
-                currentEmployee.paymentsToday = parseFloat(currentEmployee.paymentsToday.toString()) - parseFloat(this.form.amount.toString())
-                this.afs.collection("employees").doc(res.docChanges[0].doc.id).set(currentEmployee)
-              }
-            })
-            loader.dismiss()
-            this.viewCtrl.dismiss(this.form);
-        })
     } else {
       alert("Hay errores en el formulario, revise e intente de nuevo.")
     }

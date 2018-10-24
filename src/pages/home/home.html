@@ -14,8 +14,13 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
-    <ion-searchbar (ionInput)="getItems($event)"></ion-searchbar>
+<ion-content>
+  <ion-searchbar placeholder="Buscar" (ionInput)="getItems($event)"></ion-searchbar>
+  
+  <ion-refresher (ionRefresh)="ngOnInit($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
   <ion-list no-lines>
     <button ion-item *ngFor="let customer of customers" (tap)="itemSelected(customer)">
       <ion-avatar class="ion-avatar-icon" item-start>
@@ -25,4 +30,5 @@
       <h3>${{ customer.balance }}</h3>
     </button>  
   </ion-list>
+
 </ion-content>

@@ -15,12 +15,12 @@
 </ion-header>
 
 
-<ion-content padding>
+<ion-content>
   <ion-list>
-      <ion-item *ngFor="let order of Orders | async" (tap)="asheet(order)">
-        <h2>{{order.folio || 'C' + order.id}} / {{order.customer.company}}</h2>
-        <h3>{{order.date}}</h3>
-        <p>$ {{order.balance}}</p>
-      </ion-item>
-    </ion-list>
+    <ion-item *ngFor="let order of Orders" (tap)="asheet(order)">
+      <h2>{{order.folio || 'C' + order.id}} / {{order.customer.company}}</h2>
+      <h3>{{order.date}}</h3>
+      <p>$ {{order.balance}}</p>
+    </ion-item>
+  </ion-list>
 </ion-content>

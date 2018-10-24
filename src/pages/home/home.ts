@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { NavController, AlertController } from 'ionic-angular';
 import { ActionSheetController } from 'ionic-angular';
-import { AngularFirestore, AngularFirestoreCollection } from "angularfire2/firestore";
-import { AngularFireAuth } from 'angularfire2/auth'
 
 import { OrdersPage } from '../orders/orders'
 import { CreditsPage } from '../credits/credits'
@@ -15,6 +13,7 @@ import { RoutesProvider } from '../../providers/routes/routes';
 import { SessionProvider } from '../../providers/session/session';
 import { Customer as LocalCustomer } from '../../classes/structs'
 import { Employee as LocalEmployee } from '../../classes/structs';
+import { LossesPage } from '../losses/losses';
 
 @Component({
   selector: 'page-home',
@@ -33,7 +32,6 @@ export class HomePage implements OnInit {
     public alertCtrl: AlertController,
     
     /** RECODING */
-    public localcustomer: LocalCustomer,
     public employee: LocalEmployee,
     public session: SessionProvider,
     /** RECODING END */
@@ -42,22 +40,26 @@ export class HomePage implements OnInit {
   {
   }
 
-  async ngOnInit() {
+  async ngOnInit(refresher?) {
     this.customers = []; //reiniciar variable para limpiar busqueda
 
     if(await this.session.exists()) {
       await this.employee.setByIUD(this.session.CurrentUser.uid)
-      if(await this.employee.hasStockToday()) {
-        this.LoadCustomerList();
+      if(await this.employee.hasStock()) {
+        this.LoadCustomerList(refresher);
       } else {
         this.showWindowAddStock();
       }
     }   
   }
   
-  LoadCustomerList() {
+  LoadCustomerList(refresher?) {
     this.employee.getMyCustomerList()
     .then((res:any) => {
+      
+      if(refresher) 
+        refresher.complete()
+
       this.customers = res
       this.customersOld = res
     });
@@ -73,7 +75,6 @@ export class HomePage implements OnInit {
       buttons: [{
         icon: 'list-box',
         text: 'Nuevo Pedido',
-        role: 'destructive',
         handler: () => {
           if(parseFloat(customer.balance) >= parseFloat(customer.limit_credit)) {
             alert("Este cliente ha superdado su limite de credito.")
@@ -90,6 +91,13 @@ export class HomePage implements OnInit {
             this.navCtrl.push(CreditsPage, customer)
           else
             alert("El cliente no cuenta con adeudo!")
+        }
+      }, 
+      {
+        icon: 'trending-down',
+        text: 'Mermas',
+        handler: () => {
+          this.navCtrl.push(LossesPage, {customer: customer})
         }
       }, 
       {

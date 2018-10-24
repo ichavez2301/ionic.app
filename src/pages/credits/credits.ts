@@ -1,28 +1,8 @@
 import { Component, OnInit } from '@angular/core'
 import { IonicPage, NavController, NavParams, ActionSheetController } from 'ionic-angular'
-import { AngularFirestore, AngularFirestoreCollection } from 'angularfire2/firestore'
-import { Observable } from 'rxjs/Observable'
 import { PaymentPage } from '../payment/payment'
-import { LossesPage } from '../losses/losses'
-/**
- * Generated class for the CreditsPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
+import { Order, Customer } from '../../classes/structs';
 
-interface Order {
-  amount: string,
-  balance: number,
-  cid: number,
-  customer: number,
-  date: string, //date
-  eid: string,
-  id: number,
-  orderType: string,
-  products: any,
-  total: number
-}
 
 @IonicPage()
 @Component({
@@ -30,23 +10,20 @@ interface Order {
   templateUrl: 'credits.html',
 })
 export class CreditsPage implements OnInit {
-  public OrderCollection: AngularFirestoreCollection<Order>;
-  public Orders: Observable<Order[]>;
-
-  public Customer: any;
+  public customer: Customer;
+  public Orders: Array<Order> = [];
 
   constructor(
     public navCtrl: NavController, 
     public navParams: NavParams, 
-    public as: ActionSheetController,
-    private afs: AngularFirestore) {
+    public order: Order,
+    public as: ActionSheetController) {
 
-      this.Customer = this.navParams.data;
+      this.customer = this.navParams.data;
   }
 
-  ngOnInit() {
-    this.OrderCollection = this.afs.collection("orders", ref => ref.where("orderType", "==", "credito").where("balance", ">", 0).where("cid", "==", this.Customer.id))
-    this.Orders = this.OrderCollection.valueChanges()
+  async ngOnInit() {
+    this.Orders = await this.order.findCustomerCredits(this.customer.id)
   }
 
   asheet(order) {
@@ -56,15 +33,9 @@ export class CreditsPage implements OnInit {
         icon: 'card',
         text: 'Abonar',
         handler: () => {
-          this.navCtrl.push(PaymentPage, { customer: this.Customer, order: order })
+          this.navCtrl.push(PaymentPage, { customer: this.customer, order: order })
         }
-      },{
-        icon: 'card',
-        text: 'Registrar mermas',
-        handler: () => {
-          this.navCtrl.push(LossesPage, { customer: this.Customer, order: order })
-        }
-      },{
+      }, {
         icon: 'close',
         text: 'Cancelar',
         role: 'cancel',
@@ -73,6 +44,7 @@ export class CreditsPage implements OnInit {
         }
       }]
     });
+
     actionSheet.present();
   }
 

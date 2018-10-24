@@ -19,15 +19,16 @@
 </ion-header>
 
 
-<ion-content padding>
+<ion-content>
   <div *ngIf="!isCollection">
-    <ion-list>
+    <ion-list no-lines>
       <button ion-item *ngFor="let product of products" (tap)="itemSelected(product)">
         <ion-avatar class="ion-avatar-icon" item-start>
           <ion-icon name="pricetag"></ion-icon>
         </ion-avatar>
-        <h2>{{ product.name}} ({{product.qty}} PZAS)</h2>
-        <h3>Precio ${{_parseFloat(product.price) - _parseFloat(customer.discount)}}</h3>
+        <h2>{{ product.name}}</h2>
+        <h3>{{product.qty}} pzas en stock</h3>
+        <p>Precio ${{_parseFloat(product.price) - _parseFloat(customer.discount)}}</p>
       </button> 
     </ion-list>
   </div>

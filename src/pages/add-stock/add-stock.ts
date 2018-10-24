@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ViewController } from 'ionic-angular';
 import { ProductsProvider } from '../../providers/products/products';
-import { Observable } from 'rxjs/Observable';
-import { StockProvider, Stock } from '../../providers/stock/stock';
 import { HomePage } from '../home/home';
-import { AngularFireAuth } from 'angularfire2/auth';
 import * as moment from 'moment'
+import { SessionProvider } from '../../providers/session/session';
+import { Employee, Stock, ProductInStock } from '../../classes/structs';
 /**
  * Generated class for the AddStockPage page.
  *
@@ -22,21 +21,22 @@ export class AddStockPage implements OnInit {
   public disabledButton: Boolean = false;
 
   constructor(
-    public afa: AngularFireAuth,
     public navCtrl: NavController, 
-    public navParams: NavParams, 
-    private stockService: StockProvider,
+    public navParams: NavParams,
+    public viewCtrl: ViewController,
+
+    public employee: Employee,
+    public session: SessionProvider,
     private productService: ProductsProvider) {  }
 
   public form: Stock = new Stock();
-  public products: Observable<any[]>;
 
   ngOnInit() {
     this.productService.all().ref.get()
     .then((res) => {
       if(res.docChanges.length > 0) {
         res.docChanges.forEach((item: any) => {
-          let product = item.doc.data()
+          let product: ProductInStock = item.doc.data()
           product.qty = 0
           this.form.products.push(product)
         })
@@ -46,14 +46,21 @@ export class AddStockPage implements OnInit {
 
   sendStock() {
     this.disabledButton = true
-    this.form.eid = this.afa.auth.currentUser.uid
+    this.form.eid = this.session.CurrentUser.uid
     this.form.date = moment().format("Y-MM-DD")
-
-    this.stockService.create(this.form)
-    .then((res) => {
+    
+    let stock = Object.assign({}, this.form)
+    this.employee.addStock(stock)
+    .then(() => {
       this.disabledButton = false
-      this.navCtrl.setRoot(HomePage)
+      this.viewCtrl.dismiss();
     })
+
+    // this.stockService.create(this.form)
+    // .then((res) => {
+    //   this.disabledButton = false
+    //   this.navCtrl.setRoot(HomePage)
+    // })
   }
 
 }

@@ -13,21 +13,27 @@
 </ion-header>
 
 <ion-content padding>
-  <ion-list>
-    <ion-item>
-      <ion-label>Concepto</ion-label>
-      <ion-select [(ngModel)]="form.description">
-        <ion-option value="Gasolina">Gasolina</ion-option>
-        <ion-option value="Hielo">Hielo</ion-option>
-        <ion-option value="Otro">Otro</ion-option>
-      </ion-select>
-    </ion-item>
-    <ion-item>
-      <ion-label>Cantidad</ion-label>
-      <ion-input [(ngModel)]="form.amount" type="number"></ion-input>
-    </ion-item>
-    <ion-item>
-      <button ion-button block (tap)="doSave()">Guardar</button>
-    </ion-item>
-  </ion-list>      
+  <form #formExpense="ngForm">
+    <ion-list>
+      <ion-item>
+        <ion-label floating>Concepto</ion-label>
+        <ion-select [(ngModel)]="expense.description" name="description" required>
+          <ion-option value="Gasolina">Gasolina</ion-option>
+          <ion-option value="Hielo">Hielo</ion-option>
+          <ion-option value="Otro">Otro</ion-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label floating>Cantidad</ion-label>
+        <ion-input [(ngModel)]="expense.amount" type="number" name="amount" min="1" required></ion-input>
+      </ion-item>
+    </ion-list>  
+
+    <ion-fab bottom right>
+      <button ion-fab [disabled]="formExpense.invalid || (expense.amount <= 0)" (tap)="doSave()">
+        <ion-icon name="send"></ion-icon>
+      </button>
+    </ion-fab>
+  </form>
+
 </ion-content>

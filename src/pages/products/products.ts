@@ -1,64 +1,47 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { IonicPage, NavController, NavParams, ViewController } from 'ionic-angular';
-import { AngularFirestore, AngularFirestoreCollection } from "angularfire2/firestore";
-import 'rxjs/add/operator/map'
-import { Observable } from 'rxjs/Observable';
-import { Product } from '../../providers/products/products';
-import { AngularFireAuth } from 'angularfire2/auth';
-import { StockProvider } from '../../providers/stock/stock';
 
-
-// import { FirebaseProvider } from '../../providers/firebase/firebase'
-/**
- * Generated class for the ProductsPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
+import { Employee as LocalEmployee, Order, Customer, Product } from '../../classes/structs'
+import { ProductInStock as LocalProductInStock } from '../../classes/structs'
 
 @IonicPage()
 @Component({
   selector: 'page-products',
   templateUrl: 'products.html',
 })
-export class ProductsPage { 
-  productCollection: AngularFirestoreCollection<Product>
-  products: Observable<Product[]>;
-  customer: any;
-  order: any;
+export class ProductsPage implements OnInit { 
+  products: LocalProductInStock[] = [];
+  customer: Customer;
+  order: Order;
   isCollection: boolean = false;
 
   constructor(
     public navCtrl: NavController,
-    private stock: StockProvider,
     public navParams: NavParams, 
-    public viewCtrl: ViewController, 
-    private afs: AngularFirestore,
-    private afa: AngularFireAuth) {
+    public viewCtrl: ViewController,
+    public productCtrl: Product,
+    public employee: LocalEmployee) {}
+
+  async ngOnInit() {
     this.customer = this.navParams.get("customer")
     this.order    = this.navParams.get("order")
-
-    //mostrar solo productos que tengo en stock
-    this.stock.today(this.afa.auth.currentUser.uid).get()
-    .then((res: any) => {
-      if(res.docChanges.length > 0) {
-        //todo bien
-        this.products = res.docChanges[0].doc.data().products;
-      } else {
-        //no hay mercancias por vender. agregue mercancias
-      }
-    })
+    
+    this.products = this.employee.stock.products
+    
   }
   
-  itemSelected(product) {
-    if(parseInt(product.qty) > 0) {
+  itemSelected(product: LocalProductInStock) {
+    if(product.qty > 0 || this.order) 
+    {
       if(this.isCollection)
         product.price = product.price - this.customer.discount
       else 
         product.price = product.price
         
       this.viewCtrl.dismiss(product)
-    } else {
+    } 
+    else 
+    {
       alert("No cuenta con stock de este producto.");
     }
   }

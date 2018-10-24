@@ -16,12 +16,23 @@
 // automatically applied to the <body> element in the app.
 .ion-avatar-icon {
   background: color($colors, secondary);
-  border-radius: 22px;   
+  border-radius: 22px;
+  color: white;
 }
 .ion-avatar-icon ion-icon{
-  margin-top: 10px;
+  margin-top: 9px;
   margin-left: 12px;
 }
 .user-content {
   padding: 20px;
+}
+
+ion-content {
+  background-color: #eeeeee !important;
+}
+.item-md {
+  background-color: transparent !important;
+}
+.toolbar-title-md {
+  font-weight: 400 !important;
 }

@@ -12,23 +12,23 @@
 
 </ion-header>
 
-<ion-content padding>
+<ion-content>
   
   <ion-item>
     <ion-label floating>Adeudo</ion-label>
-    <ion-input [(ngModel)]="form.balance" type="number" disabled></ion-input>
+    <ion-input [(ngModel)]="order.balance" type="number" disabled></ion-input>
   </ion-item>
   <ion-item>
     <ion-label floating>Pago de</ion-label>
-    <ion-input [(ngModel)]="form.amount" type="number"></ion-input>
+    <ion-input type="number" [(ngModel)]="payment.amount"></ion-input>
   </ion-item>
   <ion-item>
     <ion-label floating>Resta</ion-label>
-    <ion-input value="{{form.balance - form.amount}}" disabled type="number"></ion-input>
+    <ion-input value="{{order.balance - payment.amount}}" disabled type="number"></ion-input>
   </ion-item>
 
   <ion-fab right bottom>
-      <button ion-fab (tap)="doPayment()" color="primary">
+      <button ion-fab (tap)="doPayment()" [disabled]="disabled" color="primary">
         <ion-icon name="send"></ion-icon>
       </button>
     </ion-fab>

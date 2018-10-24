@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams, ViewController } from 'ionic-angular';
+import { Order, OrderType } from '../../classes/structs';
 
 @IonicPage()
 @Component({
@@ -7,17 +8,18 @@ import { IonicPage, NavController, NavParams, ViewController } from 'ionic-angul
   templateUrl: 'create-order.html',
 })
 export class CreateOrderPage {
-  public form: any;
+  public form: Order = new Order();
 
   constructor(
     public navCtrl: NavController, 
     public viewCtrl: ViewController,
     public navParams: NavParams) {
-    this.form = this.navParams.data
-    if(this.form.data.orderType == 'contado')
-      this.form.data.amount = this.form.data.total
+    
+    this.form = this.navParams.data.data
+    if(this.form.orderType == OrderType.Counted)
+      this.form.amount = this.form.total
     else 
-      this.form.data.amount = 0
+      this.form.amount = 0
   }
 
   dismiss() {
@@ -25,7 +27,10 @@ export class CreateOrderPage {
   }
 
   ok() {
-    this.viewCtrl.dismiss(this.form.data)
+    if(typeof this.form.amount == 'string')
+      this.form.amount = parseFloat(this.form.amount)
+    
+    this.viewCtrl.dismiss(this.form)
   }
 
 }

@@ -9,6 +9,7 @@ import { AngularFireAuth } from 'angularfire2/auth'
 import { LoginPage } from '../pages/login/login';
 import { ExpensesListPage } from '../pages/expenses-list/expenses-list'
 import { PaymentsTodayPage } from '../pages/payments-today/payments-today'
+import { StockPage } from '../pages/stock/stock';
 
 
 @Component({
@@ -25,13 +26,18 @@ export class MyApp {
     public statusBar: StatusBar, 
     public splashScreen: SplashScreen, 
     public afa: AngularFireAuth) {
+      
+      this.statusBar.overlaysWebView(true);
+      this.statusBar.backgroundColorByHexString('#AD1457');
+      this.statusBar.styleLightContent();
 
     this.initializeApp();
     // used for an example of ngFor and navigation
     this.pages = [
       { title: 'Clientes', component: HomePage, icon: 'contact' },
       { title: 'Gastos', component: ExpensesListPage, icon: 'exit' },
-      { title: 'Pagos', component: PaymentsTodayPage, icon: 'cash' }
+      { title: 'Pagos', component: PaymentsTodayPage, icon: 'cash' },
+      { title: 'My stock', component: StockPage, icon: 'cube' }
     ];
 
   }

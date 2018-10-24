@@ -46,8 +46,10 @@ export class LoginPage {
           if(myuser.status == 'active') {
             this.navCtrl.setRoot(HomePage)
           } else {
-            alert("El usuario ah sido bloqueado por un administrador")
+            alert("El usuario ha sido bloqueado por un administrador")
           }
+        } else {
+          alert("El usuario no existe")
         }
       })
     })

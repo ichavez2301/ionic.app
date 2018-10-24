@@ -1,0 +1,17 @@
+<ion-header>
+
+  <ion-navbar color="primary">
+    <ion-title>Notas de crédito</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+    <ion-list radio-group>
+      <ion-item *ngFor="let nc of noteCredits">
+        <ion-label>{{nc.id}} | {{nc.balance}}</ion-label>
+        <ion-radio checked="true" value="go"></ion-radio>
+      </ion-item>
+    </ion-list>
+</ion-content>

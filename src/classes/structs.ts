@@ -2,22 +2,89 @@ import { AngularFirestore } from "angularfire2/firestore";
 import { Injectable } from "@angular/core";
 import * as moment from "moment";
 
-export function FirebaseHelperReturn(response: Promise<any>) {
+const env = 'production'
+
+export function ParseJson(object) {
+  let _object = Object.assign({}, object);
+  if(_object.db) {
+    delete _object.db;
+  }
+  return JSON.parse(JSON.stringify(_object))
+};
+
+export async function FirebaseHelperReturn(response: Promise<any>) {
   return new Promise((resolve, reject) => {
     response.then((res) => {
-      if(res.empty) {
-        resolve([])
-      } else {
-        let result = [];
-        res.docChanges.forEach((doc: any) => {
-          result.push(doc.doc.data())
-        });
+      if(res.docChanges)  {
+        if(res.empty) {
+          resolve([])
+        } else {
+          let result = [];
+          res.docChanges.forEach((doc: any) => {
+            result.push(doc.doc.data())
+          });
 
-        resolve(result)
+          resolve(result)
+        }
+      } else {
+        resolve(res.data())
       }
     })
     .catch((err) => { reject(err) })
   })
+}
+
+export function sumStocks(stockIn: Stock, stockNew: Stock) {
+  let stockOut = ParseJson(stockIn)
+  if(stockOut.products) {
+    stockOut.products.forEach((productIn) => {
+      if(stockNew.products) {
+        stockNew.products.forEach((productNew) => {
+          if(productIn.id == productNew.id) { // si son el mismo producto
+            if(typeof productNew.qty == 'string')
+              productNew.qty = parseFloat(productNew.qty)
+            if(typeof productIn.qty == 'string')
+              productIn.qty = parseFloat(productIn.qty)
+
+            productIn.qty += productNew.qty
+          }
+        })
+      }
+    })
+  }
+
+  return stockOut;
+}
+
+export function subStock(stockIn: Stock, stockNew: Stock) {
+  let stockOut = ParseJson(stockIn)
+  if(stockOut.products) {
+    stockOut.products.forEach((productIn) => {
+      if(stockNew.products) {
+        stockNew.products.forEach((productNew) => {
+          if(productIn.id == productNew.id) { // si son el mismo producto
+            if(typeof productNew.qty == 'string')
+              productNew.qty = parseFloat(productNew.qty)
+            if(typeof productIn.qty == 'string')
+              productIn.qty = parseFloat(productIn.qty)
+
+            productIn.qty -= productNew.qty
+          }
+        })
+      }
+    })
+  }
+
+  return stockOut;
+}
+
+
+export async function autoincrement(db, table: string): Promise<number> {
+  let docChanges = await db.collection(table).ref.orderBy("id", "desc").limit(1).get()
+  let ai: number = 1
+  if(docChanges.docs.length > 0)
+    ai = parseInt(docChanges.docs[0].id) + 1
+  return ai  
 }
 
 
@@ -32,22 +99,13 @@ export class Product {
   category: ProductCategory;
   name: string;
   price: number;
-  stock: number; // este valor se usaria para la produccion de productos
+  //stock: number; //Este valor se usaria para la produccion de productos
   
-  constructor() {
-      //this.index = "products";
-  }
+  constructor(private db?: AngularFirestore) {}
 
-  protected find(size:number = 20, offset: number = 0) {
-      //return this.db.collection(this.index)
+  public async find() : Promise<any> {
+    return FirebaseHelperReturn(this.db.collection("products").ref.get())
   }
-}
-
-export class ProductOrderList {
-  id: number;
-  product: Product = new Product();
-  employeeStock: number;
-  eid: string; //hash session
 }
 
 export class Route {
@@ -71,8 +129,32 @@ export class Customer {
 
   constructor(private db?: AngularFirestore) {}
 
+  public async findById(cid: number) {
+    let promise = this.db.collection("customers").doc(cid.toString()).ref.get()
+    let result: any = await FirebaseHelperReturn(promise)
+    if(result) {
+      this.id = result.id
+      this.company = result.company
+      this.companyIndex = result.companyIndex
+      this.address = result.address
+      this.contact = result.contact
+      this.email = result.email
+      this.phone = result.phone
+      this.rid = result.rid
+      this.balance = result.balance
+      this.limit_credit = result.limit_credit
+      this.discount = result.discount
+    }
+  }
+
   public find() {
     return this.db.collection("customers").ref.get();
+  }
+
+  public update() {
+    let customer = ParseJson(this)
+    if(env == 'production') 
+      this.db.collection("customers").doc(this.id.toString()).set(customer)
   }
 }
 
@@ -81,18 +163,138 @@ export enum OrderType {
   Counted = 'contado'
 }
 
+@Injectable()
 export class Order {
   id?: number;
-  customer: Customer = new Customer();
+  cid: number;
+  customer: Customer;
   date: string; // fecha de la compra (yyyy-mm-dd)
   eid: string; //hash del usuario que realizo la venta
   folio: string; //folio que se agrega manual (nota de credito)
   lastpayment: string; //fecha del ultimo pago (en caso de ser nota de credito)
-  amount: number; //total de la orden
-  balance: number; //saldo real de la orden
+  amount: number = 0; //total de la orden
+  balance: number;
+
+  //balance: number; //saldo real de la orden
   total: number = 0; //total de la orden
-  products: Product[];
+  products: ProductInStock[];
   orderType: OrderType = OrderType.Counted;
+
+  constructor(private db?: AngularFirestore) {
+    this.customer = new Customer(this.db);
+  }
+
+  public noteCreditsByClient(cid: number) {
+    let promise = this.db.collection("orders").ref
+      .where("orderType", "==", OrderType.Credit)
+      .where("balance", ">", 0)
+      .where("cid", "==", cid)
+      .get()
+
+      return FirebaseHelperReturn(promise)
+  }
+
+  public async findOrderById(order_id: number) {
+    let promise = this.db.collection("orders").doc(order_id.toString()).ref.get()
+    let result: any = await FirebaseHelperReturn(promise)
+    console.log("busqueda de orden")
+    console.log(result)
+    if(result) {
+      this.id = result.id
+      this.cid  = result.customer.id
+      this.customer = result.customer
+      this.date = result.date
+      this.eid = result.eid
+      this.folio = result.folio
+      this.lastpayment = result.lastpayment
+      this.amount = result.amount
+      this.balance = result.balance
+      this.total = result.total
+      this.products = result.products
+      this.orderType = result.orderType
+    }
+  }
+
+  public find() {}
+
+  public async findCustomerCredits(cid: number): Promise<any> {
+    let promise = this.db.collection("orders").ref
+      .where("orderType", "==", OrderType.Credit)
+      .where("balance", ">", 0)
+      .where("cid", "==", cid)
+      .get();
+
+    return FirebaseHelperReturn(promise);
+  }
+
+  public update() {
+    let data = ParseJson(this);
+    delete data.db;
+    console.log(this)
+    return this.db.collection("orders")
+      .doc(this.id.toString())
+      .update(data)
+  }
+
+  public async save() {
+    //registrar orden de compra
+    this.id = await autoincrement(this.db, 'orders');
+    let order = ParseJson(this);
+    order.cid = order.customer.id
+    console.log("creando orden")
+    let orderResult = await this.db.collection("orders").doc(order.id.toString()).set(order)
+
+    //actualizo el 
+    let customer = new Customer(this.db);
+    customer.id = this.customer.id;
+    customer.company = this.customer.company
+    customer.companyIndex = this.customer.companyIndex
+    customer.address = this.customer.address
+    customer.balance = this.customer.balance + this.total // agregamos la totalidad de factura y al complementar el pago se agrega el anticipo o liquidacion
+    customer.contact = this.customer.contact
+    customer.discount = this.customer.discount
+    customer.email = this.customer.email
+    customer.limit_credit = this.customer.limit_credit
+    customer.phone = this.customer.phone
+    customer.rid = this.customer.rid
+    console.log("guardar saldo del cliente si pago o anticipo")
+    console.log(customer)
+    customer.update();
+
+    let employee = new Employee(this.db)
+    await employee.setByIUD(this.eid)
+    
+    if(moment().format("Y-MM-DD") == employee.saleDay) {
+      employee.salesToday = employee.salesToday + this.total
+    } else {
+      employee.salesToday = this.total
+      employee.saleDay = moment().format("Y-MM-DD")
+    }
+    //agregar salidas de stock
+    let orderStock = new Stock();
+    orderStock.products = this.products
+    
+    employee.stock = subStock(employee.stock, orderStock)
+    console.log("se actualiza los records de venta del empleado")
+    employee.update()
+    
+    // registrar pago
+    if(order.amount > 0) {
+      let payment = new Payment(this.db);
+      
+      payment.customer = order.customer
+      payment.amount = order.amount,
+      payment.oid = this.id;
+      payment.eid = order.eid
+      payment.cid = order.customer.id
+      payment.folio = order.folio
+      payment.date = moment().format("YYYY-MM-DD HH:mm")
+
+      await payment.create();
+    }
+
+    return orderResult;
+  }
 }
 
 export enum EmployeeStatus {
@@ -113,9 +315,15 @@ export class Employee {
   stock: Stock;
   /** BI totales para evitar calcular grandes cantidades de informacion */
   paymentDate: string; //fecha del ultimo pago (Y-M-D)
-  paymentsToday: number; //cantidad que le han pagado segun paymentDate
+  paymentsToday: number = 0; //cantidad que le han pagado segun paymentDate
   saleDay: string; //fecha de la ultima venta (Y-M-D)
-  salesToday: number; //cantidad($) que ha vendido segun saleDay
+  salesToday: number = 0; //cantidad($) que ha vendido segun saleDay
+
+  expenses: number = 0 //total gastados ala fecha de expensesDate
+  expensesDate: string; //(Y-M-D)
+
+  returns: number = 0;
+  returnsDate: string;
 
   constructor(private db?: AngularFirestore) {}
 
@@ -133,6 +341,13 @@ export class Employee {
         this.status = EmployeeResult.status;
         this.uid = EmployeeResult.uid;
         this.rid = EmployeeResult.rid;
+        this.paymentDate = EmployeeResult.paymentDate
+        this.paymentsToday = EmployeeResult.paymentsToday
+        this.salesToday = EmployeeResult.salesToday
+        this.saleDay = EmployeeResult.saleDay
+        this.expenses = EmployeeResult.expenses
+        this.expensesDate = EmployeeResult.expensesDate
+        this.stock = EmployeeResult.stock
         resolve(this)
       })
       .catch((err) => {
@@ -159,6 +374,37 @@ export class Employee {
     })
   }
 
+  public stockIndexed() {
+    let index = {};
+    if(this.stock) {
+      this.stock.products.forEach(product => {
+        index[product.id] = product;
+      });
+    }
+
+    return index;
+  }
+
+  public async hasStock() {
+    let stockTotal = 0;
+
+    return new Promise(async (resolve, reject) => {
+      if(this.stock.products) {
+        this.stock.products.forEach((product) => {
+          stockTotal += product.qty
+        })
+
+        if(stockTotal > 0)
+          resolve(true)
+        else 
+          resolve(false)
+
+      } else {
+        resolve(false)
+      }
+    })
+  }
+
   getMyCustomerList() { // implementar paginador
     let promise = this.db.collection("customers").ref
       .orderBy("company")
@@ -168,32 +414,142 @@ export class Employee {
   }
 
   update() {
-    let data = Object.assign({}, this);
-    delete data.db;
+    let data = ParseJson(this);
+    
+    if(env == 'production') {
+      return this.db.collection("employees")
+        .doc(this.id.toString())
+        .update(data)
+    }
+  }
 
-    return this.db.collection("employees")
-      .doc(this.id.toString())
-      .update(data)
+  async addStock(stock: Stock) {
+    // agregar bitacora de stock de salida
+    // agregar sumatoria a stock de empleado
+    await this.db.collection("stock-outputs").add(stock)
+    let mystock = sumStocks(this.stock, stock)
+    this.stock = mystock
+    this.update()
   }
 }
 
+@Injectable()
 export class Expense { //Gasto
-    id?: number;
-    description: string;
-    date: string; //fecha de registro yyyy-mm-dd
-    employee: Employee = new Employee();
-    time: string; //hora del registro (hh:mm:ss)
+  id?: number;
+  description: string;
+  amount: number;
+  date: string; //fecha de registro yyyy-mm-dd
+  eid: string; //hash session
+  employee: Employee = new Employee();
+  time: string; //hora del registro (hh:mm:ss)
+
+  constructor(private db?: AngularFirestore) {}
+
+  public findByUid(uid: string) {
+    let promise = this.db.collection("expenses").ref
+      .where("date", "==", moment().format("Y-MM-DD"))
+      .where("eid", "==", uid)
+      .get()
+
+    return FirebaseHelperReturn(promise)
+  }
+
+  public async save() {
+    /**
+     * 1.- guardar gasto
+     * 2.- guardar gasto en empleado
+     */
+    if(typeof this.amount == 'string')
+      this.amount = parseFloat(this.amount)
+
+
+    let employee = new Employee(this.db);
+    await employee.setByIUD(this.eid)
+
+    this.employee = ParseJson(employee)
+    this.id = await autoincrement(this.db, 'expenses')
+    let expense = ParseJson(this)
+    let result = await this.db.collection("expenses").doc(expense.id.toString()).set(expense)
+    
+    
+    if(employee.expensesDate && moment().format("Y-M-D") == employee.expensesDate) {
+      employee.expenses = employee.expenses + this.amount
+    } else {
+      employee.expensesDate = moment().format("Y-M-D")
+      employee.expenses = this.amount
+    }
+    employee.update()
+
+    return result
+  }
 }
 
+@Injectable()
 export class Payment {
     id?: number;
-    amount: number; //cantidad que se pago
+    amount: number = 0; //cantidad que se pago
     customer: Customer = new Customer();
+    cid: number;
     date: string; //fecha de pago (yyyy-mm-dd hh:ii:ss)
     eid: string; //hash de usuario en sesion
-    folio: number; //numero de folio de nota de credito
+    folio: string; //numero de folio de nota de credito
     oid: number; //id de la orden
-    return: boolean; //proviene de una entrega de merma?
+    return: boolean = false; //proviene de una entrega de merma?
+
+    constructor(private db?: AngularFirestore) {}
+
+    public async create() {
+      /** logica de negocio
+       * 1.- registrar el pago
+       * 2.- complemento de pago en cuenta de cliente
+       * 3.- complemento de pago en cuenta de compra
+       * 4.- actualizar saldos de empleado (records de venta)
+       */
+      if(typeof this.amount == 'string')
+        this.amount = parseFloat(this.amount)
+        
+      this.id = await autoincrement(this.db, 'payments')
+      let payment = ParseJson(this);
+      delete payment.db;
+      let paymentResult = this.db.collection("payments").doc(payment.id.toString()).set(payment)
+      console.log("se crea el pago")
+
+      //complementar pago(anticipo) o liquidacion en pago de contado      
+      let customer = new Customer(this.db)
+      await customer.findById(this.customer.id)
+      console.log("cliente antes de aplicar pago")
+      console.log(customer)
+      customer.balance = customer.balance - this.amount
+      customer.update()
+      console.log("se aplica anticipo o liquidacion al balance del cliente")
+      console.log(customer)
+
+      let order = new Order(this.db)
+      await order.findOrderById(this.oid)
+    
+      order.balance = order.balance - this.amount
+      order.update()
+      console.log("se aplica anticipo o liquidacion al balance de la orden")
+
+      let employee = new Employee(this.db)
+      await employee.setByIUD(this.eid)
+      
+      if(employee.paymentDate && (moment().format("YYYY-MM-DD") == moment(employee.paymentDate).format("YYYY-MM-DD"))) {
+        employee.paymentsToday = employee.paymentsToday + this.amount
+      } else {
+        employee.paymentsToday = this.amount
+        employee.paymentDate = moment().format("YYYY-MM-DD HH:mm")
+      }
+
+      employee.update()
+      console.log("se actualizan los record de pagos del empleado")
+      console.log(employee)
+      
+      if(env == 'production')
+        return paymentResult;
+      
+      
+    }
 }
 
 export class ProductSale extends Product {
@@ -202,6 +558,13 @@ export class ProductSale extends Product {
     qty: number;
 }
 
+export enum ReturnModeTypes {
+  toAccount='to_account',
+  Cash='cash',
+  Goods='goods'
+}
+
+@Injectable()
 export class Repayment { // Orden de merma
     id?: number;
     cid: number;
@@ -210,6 +573,79 @@ export class Repayment { // Orden de merma
     oid: number;
     pqty: number; //cantidad de productos regresados
     total: number; //cantidad de efectivo regresado
+    returnMode: ReturnModeTypes = ReturnModeTypes.Cash;
+    products: ProductInStock[] = [];
+    
+    constructor(private db?: AngularFirestore) {}
+
+    async onAccount(): Promise<any> {
+      //registro de mermas
+      //restar el total de las mermas en monto y agregarlo a favor del cliente
+      return new Promise(async (resolve, reject) => {
+        this.products = ParseJson(this.products)
+        let repayment = ParseJson(this)
+        repayment.id = await autoincrement(this.db, 'repayments')
+        await this.db.collection("repayments").doc(repayment.id.toString()).set(repayment)
+        
+        let customer = new Customer(this.db);
+        await customer.findById(this.cid)
+        customer.balance = customer.balance - this.total
+        customer.update()
+
+        let order = new Order(this.db); //restar de la orden selecionada
+        await order.findOrderById(this.oid)
+        order.balance = order.balance - this.total;
+        await order.update()
+
+        resolve(repayment)
+      });
+    }
+
+    async onCash(): Promise<any> {
+      //registro de mermas
+      //registro de pago negativo
+      //restar de los pagos de empleado
+      return new Promise(async (resolve, reject) => {
+        let repayment = ParseJson(this)
+        repayment.id = await autoincrement(this.db, 'repayments')
+        await this.db.collection("repayments").doc(repayment.id.toString()).set(repayment)
+
+        let employee = new Employee(this.db)
+        await employee.setByIUD(this.eid)
+
+        if(employee.returnsDate && moment().format("Y-M-D") == employee.returnsDate) {
+          employee.returns = employee.returns + this.total
+        } else {
+          employee.returnsDate = moment().format("Y-M-D")
+          employee.returns = this.total
+        }
+
+        await employee.update()
+        resolve(repayment)
+      });
+    }
+
+    async onGoods(): Promise<any> {
+      //registro de mermas
+      //salida de stock
+      return new Promise(async (resolve, reject) => {
+        let repayment = ParseJson(this)
+        repayment.id = await autoincrement(this.db, 'repayments')
+        //await this.db.collection("repayments").doc(repayment.id.toString()).set(repayment)
+
+        let employee = new Employee(this.db)
+        await employee.setByIUD(this.eid)
+
+        let outStock = new Stock();
+        outStock.products = this.products;
+        employee.stock = subStock(employee.stock, outStock)
+        console.log(employee.stock, outStock)
+
+        await employee.update()
+
+        resolve(repayment)
+      });
+    }
 }
 
 export class ProductReturn extends Product {
@@ -229,9 +665,16 @@ export class ProductReturn extends Product {
         }
     }
 }
+export class ProductInStock extends Product {
+  qty: number;
+}
+
+export class ProductInOrder extends ProductInStock {
+  stock: number;
+}
 
 export class Stock { // Stock de empleado (cuanto se llevo)
   date: string; //fecha de registro en stock
   eid: string;
-  products: Product[];
+  products: ProductInStock[] = [];
 }

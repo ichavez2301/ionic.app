@@ -1,0 +1,47 @@
+<ion-header>
+
+  <ion-navbar color="primary">
+      <ion-buttons start>
+        <button ion-button icon-only (tap)="dismiss()">
+          <ion-icon name="close"></ion-icon>
+        </button>
+      </ion-buttons>
+    <ion-title>Metodo de reembolso</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content>
+  <div class="legend-warning" *ngIf="returnGoodsDisabled">
+    No cuenta con suficiente stock para hacer la devolución de mercancía. Intente dividir la devolución entre tipo mercancía y efectivo. 
+  </div>
+  <ion-list radio-group no-lines [(ngModel)]="repayment.returnMode">
+    
+    <!-- <ion-item>
+      <ion-radio checked="true" value="to_account"></ion-radio>
+      <ion-label>Abono a cuenta</ion-label> 
+    </ion-item> -->
+  
+    <ion-item>
+      <ion-radio value="cash"></ion-radio>
+      <ion-label>Efectivo</ion-label>
+    </ion-item>
+  
+    <ion-item>
+      <ion-radio value="goods" [disabled]="returnGoodsDisabled"></ion-radio>
+      <ion-label>Mercancia nueva</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <small *ngIf="repayment.returnMode == 'to_account'">Se abonará a la cuenta {{repayment.total}} pesos</small>
+  <small *ngIf="repayment.returnMode == 'cash'">Se entregará {{repayment.total}} pesos en efectivo al cliente</small>
+  <small *ngIf="repayment.returnMode == 'goods'">Se entregará {{repayment.pqty}} productos nuevo al cliente</small>
+
+  <ion-fab bottom right>
+    <button ion-fab (click)="doReturn()">
+      <ion-icon name="send"></ion-icon>
+    </button>
+  </ion-fab>
+
+</ion-content>

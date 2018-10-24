@@ -38,15 +38,20 @@ import { StockProvider } from '../providers/stock/stock';
 import { AddStockPageModule } from '../pages/add-stock/add-stock.module';
 import { RoutesProvider } from '../providers/routes/routes';
 import { CreateOrderPage } from '../pages/create-order/create-order';
-import { Customer, Employee } from '../classes/structs';
+import { Customer, Employee, Order, Payment, Expense, Repayment, Product } from '../classes/structs';
 import { SessionProvider } from '../providers/session/session';
+import { StockPageModule } from '../pages/stock/stock.module';
+import { ReturnModePage } from '../pages/return-mode/return-mode';
+import { SelectCreditNotePage } from '../pages/select-credit-note/select-credit-note';
 
 @NgModule({
   declarations: [
     MyApp,
     HomePage,
     ListPage,
-    CreateOrderPage
+    CreateOrderPage,
+    ReturnModePage,
+    SelectCreditNotePage
   ],
   imports: [
     BrowserModule,
@@ -62,6 +67,7 @@ import { SessionProvider } from '../providers/session/session';
     PaymentPageModule,
     PaymentsTodayPageModule,
     AddStockPageModule,
+    StockPageModule,
 
     IonicModule.forRoot(MyApp),
     AngularFireModule.initializeApp(config),
@@ -74,7 +80,9 @@ import { SessionProvider } from '../providers/session/session';
     MyApp,
     HomePage,
     ListPage,
-    CreateOrderPage
+    CreateOrderPage,
+    ReturnModePage,
+    SelectCreditNotePage
   ],
   providers: [
     StatusBar,
@@ -90,8 +98,14 @@ import { SessionProvider } from '../providers/session/session';
     ProductsProvider,
     StockProvider,
     RoutesProvider,
+    
+    Order,
     Customer,
     Employee,
+    Payment,
+    Expense,
+    Repayment,
+    Product,
     SessionProvider
   ]
 })
