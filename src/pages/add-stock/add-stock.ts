@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { IonicPage, NavController, NavParams, ViewController } from 'ionic-angular';
 import { ProductsProvider } from '../../providers/products/products';
-import { HomePage } from '../home/home';
 import * as moment from 'moment'
 import { SessionProvider } from '../../providers/session/session';
 import { Employee, Stock, ProductInStock } from '../../classes/structs';
@@ -50,6 +49,7 @@ export class AddStockPage implements OnInit {
     this.form.date = moment().format("Y-MM-DD")
     
     let stock = Object.assign({}, this.form)
+    
     this.employee.addStock(stock)
     .then(() => {
       this.disabledButton = false

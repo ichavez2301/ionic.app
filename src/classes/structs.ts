@@ -36,6 +36,9 @@ export async function FirebaseHelperReturn(response: Promise<any>) {
 
 export function sumStocks(stockIn: Stock, stockNew: Stock) {
   let stockOut = ParseJson(stockIn)
+  if(!stockIn.products)
+    return stockNew
+    
   if(stockOut.products) {
     stockOut.products.forEach((productIn) => {
       if(stockNew.products) {
@@ -126,6 +129,7 @@ export class Customer {
   balance: number; //saldo real del cliente
   limit_credit: number; //limite de compra del cliente
   discount: number; //si quiero dar precio preferencial a un cliente en especifico
+  byorder: number = 0;
 
   constructor(private db?: AngularFirestore) {}
 
@@ -144,6 +148,7 @@ export class Customer {
       this.balance = result.balance
       this.limit_credit = result.limit_credit
       this.discount = result.discount
+      this.byorder = result.byorder
     }
   }
 
@@ -407,7 +412,6 @@ export class Employee {
 
   getMyCustomerList() { // implementar paginador
     let promise = this.db.collection("customers").ref
-      .orderBy("company")
       .where("rid", "==", this.rid).get()
 
     return FirebaseHelperReturn(promise);
@@ -517,19 +521,14 @@ export class Payment {
       //complementar pago(anticipo) o liquidacion en pago de contado      
       let customer = new Customer(this.db)
       await customer.findById(this.customer.id)
-      console.log("cliente antes de aplicar pago")
-      console.log(customer)
       customer.balance = customer.balance - this.amount
       customer.update()
-      console.log("se aplica anticipo o liquidacion al balance del cliente")
-      console.log(customer)
 
       let order = new Order(this.db)
       await order.findOrderById(this.oid)
     
       order.balance = order.balance - this.amount
       order.update()
-      console.log("se aplica anticipo o liquidacion al balance de la orden")
 
       let employee = new Employee(this.db)
       await employee.setByIUD(this.eid)
@@ -542,8 +541,6 @@ export class Payment {
       }
 
       employee.update()
-      console.log("se actualizan los record de pagos del empleado")
-      console.log(employee)
       
       if(env == 'production')
         return paymentResult;

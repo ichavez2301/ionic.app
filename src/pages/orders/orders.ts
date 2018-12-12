@@ -5,7 +5,7 @@ import { ProductsPage } from '../products/products'
 import { AlertController } from 'ionic-angular/components/alert/alert-controller';
 import moment from 'moment'
 import { CreateOrderPage } from '../create-order/create-order';
-import { Order as LocalOrder, ProductInOrder, ProductInStock } from '../../classes/structs';
+import { Order as LocalOrder, ProductInOrder, ProductInStock, OrderType } from '../../classes/structs';
 import { SessionProvider } from '../../providers/session/session';
 import { HomePage } from '../home/home';
 
@@ -86,6 +86,12 @@ export class OrdersPage implements OnInit {
   doSale() {
     if(this.productsOnOrder.length == 0) {
       alert("Seleccione al menos un producto")
+      return
+    }
+
+    let creditAvailable = (this.order.customer.limit_credit - this.order.customer.balance);
+    if(this.order.total > creditAvailable && this.order.orderType == OrderType.Credit) {
+      alert("Esta orden no puede ser completada porque supera su limite de crédito. Crédito disponible = " + creditAvailable)
       return
     }
 

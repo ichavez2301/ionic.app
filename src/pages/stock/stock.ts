@@ -33,7 +33,9 @@ export class StockPage implements OnInit {
     if(await this.session.exists()) {
       console.log("finding")
       await this.employee.setByIUD(this.session.CurrentUser.uid)
-      this.stock = this.employee.stock
+      
+      if(this.employee.stock)
+        this.stock = this.employee.stock
     }
   }
 

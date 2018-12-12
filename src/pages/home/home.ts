@@ -45,11 +45,7 @@ export class HomePage implements OnInit {
 
     if(await this.session.exists()) {
       await this.employee.setByIUD(this.session.CurrentUser.uid)
-      if(await this.employee.hasStock()) {
-        this.LoadCustomerList(refresher);
-      } else {
-        this.showWindowAddStock();
-      }
+      this.LoadCustomerList(refresher);    
     }   
   }
   

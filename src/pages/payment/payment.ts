@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, LoadingController } from 'ionic-angular';
 import { HomePage } from '../home/home'
 import moment from 'moment'
 import { PaymentProvider } from '../../providers/payment/payment';
@@ -26,6 +26,7 @@ export class PaymentPage {
     public orderProvider: OrderProvider,
     public navCtrl: NavController, 
     public navParams: NavParams,
+    public loadingCtrl: LoadingController,
     
     public payment: Payment,
     public session: SessionProvider) {
@@ -44,10 +45,13 @@ export class PaymentPage {
       this.payment.date = moment().format("Y-MM-DD hh:mm:ss")
       this.payment.eid = this.session.CurrentUser.uid
       this.payment.oid = this.order.id
-      
+      let loading = this.loadingCtrl.create({content: "Guardando pago, espere porfavor"})
+      loading.present()
+
       if(!this.disabled) {
         this.disabled = true
         this.payment.create().then(() => {
+          loading.dismiss()
           this.disabled = false;
           this.navCtrl.setRoot(HomePage)
         })
