@@ -628,7 +628,7 @@ export class Repayment { // Orden de merma
       return new Promise(async (resolve, reject) => {
         let repayment = ParseJson(this)
         repayment.id = await autoincrement(this.db, 'repayments')
-        //await this.db.collection("repayments").doc(repayment.id.toString()).set(repayment)
+        await this.db.collection("repayments").doc(repayment.id.toString()).set(repayment)
 
         let employee = new Employee(this.db)
         await employee.setByIUD(this.eid)
