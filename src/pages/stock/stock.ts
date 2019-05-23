@@ -31,11 +31,11 @@ export class StockPage implements OnInit {
 
   async ngOnInit() {
     if(await this.session.exists()) {
-      console.log("finding")
       await this.employee.setByIUD(this.session.CurrentUser.uid)
       
-      if(this.employee.stock)
+      if(this.employee.stock) {
         this.stock = this.employee.stock
+      }
     }
   }
 

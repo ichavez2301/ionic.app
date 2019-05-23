@@ -16,6 +16,8 @@ export class CreateOrderPage {
     public navParams: NavParams) {
     
     this.form = this.navParams.data.data
+    this.form.folio = "";
+    this.form.amount = 0;
     if(this.form.orderType == OrderType.Counted)
       this.form.amount = this.form.total
     else 

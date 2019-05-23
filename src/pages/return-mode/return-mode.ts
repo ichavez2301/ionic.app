@@ -3,7 +3,6 @@ import { IonicPage, NavController, NavParams, ViewController, ModalController } 
 import { Repayment, ReturnModeTypes, Employee } from '../../classes/structs';
 import { SelectCreditNotePage } from '../select-credit-note/select-credit-note';
 import { SessionProvider } from '../../providers/session/session';
-import { HomePage } from '../home/home';
 
 @IonicPage()
 @Component({
@@ -73,7 +72,7 @@ export class ReturnModePage {
 
     promise.then(() => {
       alert("La devolución se generó correctamente.")
-      this.navCtrl.setRoot(HomePage)
+      this.viewCtrl.dismiss()
     })
   }
 

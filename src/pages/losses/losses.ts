@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams, ModalController, AlertController, LoadingController } from 'ionic-angular';
+import { IonicPage, NavController, NavParams, ModalController, AlertController } from 'ionic-angular';
 import { ProductsPage } from '../products/products';
 import moment from 'moment';
 import { AngularFireAuth } from "angularfire2/auth";
@@ -31,8 +31,6 @@ export class LossesPage {
     public navParams: NavParams, 
     public modalCtrl: ModalController, 
     public alertCtrl: AlertController,
-    
-    private loadingCtrl: LoadingController,
     private afa: AngularFireAuth
   ) 
   {
@@ -108,6 +106,9 @@ export class LossesPage {
               //this.createRepayment()
               let modal = this.modalCtrl.create(ReturnModePage, { repayment: this.repayment })
               modal.present()
+              modal.onDidDismiss(() => {
+                this.navCtrl.popToRoot();
+              })
             }
           }]
       });

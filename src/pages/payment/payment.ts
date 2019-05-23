@@ -35,6 +35,8 @@ export class PaymentPage {
       this.customer     = this.navParams.data.customer
       this.currentOrder = this.navParams.data.order
       this.typeOrder    = this.navParams.data.orderType
+
+      this.payment.amount = 0;
   }
 
   public doPayment() {

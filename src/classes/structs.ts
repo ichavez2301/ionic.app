@@ -36,7 +36,7 @@ export async function FirebaseHelperReturn(response: Promise<any>) {
 
 export function sumStocks(stockIn: Stock, stockNew: Stock) {
   let stockOut = ParseJson(stockIn)
-  if(!stockIn.products)
+  if(!stockIn.products || stockIn.products.length == 0)
     return stockNew
     
   if(stockOut.products) {
@@ -421,6 +421,7 @@ export class Employee {
     let data = ParseJson(this);
     
     if(env == 'production') {
+      console.log(this.id, data)
       return this.db.collection("employees")
         .doc(this.id.toString())
         .update(data)
@@ -570,7 +571,7 @@ export class Repayment { // Orden de merma
     oid: number;
     pqty: number; //cantidad de productos regresados
     total: number; //cantidad de efectivo regresado
-    returnMode: ReturnModeTypes = ReturnModeTypes.Cash;
+    returnMode: ReturnModeTypes = ReturnModeTypes.Goods;
     products: ProductInStock[] = [];
     
     constructor(private db?: AngularFirestore) {}

@@ -51,7 +51,11 @@ export class OrdersPage implements OnInit {
           let productInOrder = new ProductInOrder();
           productInOrder.id = product.id
           productInOrder.name = product.name
-          productInOrder.price = product.price
+          if(this.order.customer.discount > 0)
+            productInOrder.price = product.price - this.order.customer.discount
+          else 
+            productInOrder.price = product.price
+
           productInOrder.qty = 1; //una orden inicia con un producto
           productInOrder.stock = product.qty //cantidad en stock
 
